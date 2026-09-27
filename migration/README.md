@@ -159,7 +159,8 @@ plan: create=12 update=7 delete=0 replace=0 forget=1 moved=6 import=1
 OK: no stateful resource is deleted or replaced.
 ```
 
-CI runs the same script on every PR ([ADR 0005](../docs/adr/0005-plan-json-policy-gate.md)).
+In the client's repository, [`examples/workflows/plan.yml`](../examples/workflows/plan.yml) runs the same script on
+every PR ([ADR 0005](../docs/adr/0005-plan-json-policy-gate.md)).
 
 ## 8. Apply and confirm
 

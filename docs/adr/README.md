@@ -12,5 +12,7 @@ the decision true.
 | [0004](0004-declarative-refactoring.md) | Refactor state with moved, removed and import blocks, not CLI commands | Accepted |
 | [0005](0005-plan-json-policy-gate.md) | Block plans that delete or replace stateful resources | Accepted |
 | [0006](0006-native-terraform-test.md) | Native terraform test with mock_provider instead of Terratest | Accepted |
+| [0007](0007-assert-intentional-findings.md) | Assert the intentional findings in before/ instead of skipping them | Accepted |
+| [0008](0008-no-cloud-access-in-repo-ci.md) | This repository's CI has no cloud access; AWS-facing workflows ship as examples | Accepted |
 
 New records copy the structure of an existing one and take the next number.

@@ -37,3 +37,6 @@ plan.txt
 checkov-before*
 tflint-before*
 backups/
+
+# Vale packages (downloaded by vale sync)
+styles/

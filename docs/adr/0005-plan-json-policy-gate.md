@@ -28,7 +28,7 @@ uses only `jq`, so it runs the same way locally and in CI.
 
 - `scripts/tests/test-check-plan.sh` runs the script against fixtures, including a replaced state bucket and a rename
   without a move, in pre-commit and CI.
-- The `plan` workflow runs the check for each root before posting the plan comment.
+- `examples/workflows/plan.yml` runs the check for each root before posting the plan comment.
 
 ## Notes
 

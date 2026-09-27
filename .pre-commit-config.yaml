@@ -20,8 +20,8 @@ repos:
         args: [--branch, main]
 
   # before/ is the inherited codebase: it is formatted and validated, but its
-  # tflint and Checkov findings are the point, so those hooks skip it. CI scans
-  # it separately in the non-blocking before-findings job.
+  # tflint and Checkov findings are the point, so these hooks (which fail on any
+  # finding) skip it. `make findings` scans it and asserts the exact findings.
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.109.1
     hooks:
@@ -53,6 +53,22 @@ repos:
         language: system
         pass_filenames: false
         files: ^after/modules/app-storage/
+      - id: check-findings
+        name: before/ findings match report/evidence
+        entry: scripts/check-findings.sh
+        language: system
+        pass_filenames: false
+        files: ^(before/|after/|report/(REPORT\.md|evidence/)|\.checkov\.yaml|\.tflint\.hcl|scripts/check-findings\.sh)
+      - id: shellharden
+        name: shellharden
+        entry: shellharden --check
+        language: system
+        types: [shell]
+      - id: vale
+        name: vale
+        entry: bash -c 'vale sync --no-progress >/dev/null 2>&1; vale --minAlertLevel=error "$@"' --
+        language: system
+        types: [markdown]
       - id: plan-gate-tests
         name: plan gate fixtures
         entry: scripts/tests/test-check-plan.sh

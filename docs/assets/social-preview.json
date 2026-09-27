@@ -1,0 +1,21 @@
+{
+  "color": "#844FBA",
+  "heading": [
+    "Terraform diagnostic",
+    "& repair plan"
+  ],
+  "subtitle": "read-only checks · ranked findings · 0 destroyed",
+  "steps": [
+    {
+      "label": "Read-only checks"
+    },
+    {
+      "label": "Ranked findings"
+    },
+    {
+      "label": "Fixes as pull requests"
+    }
+  ],
+  "illustration": "social-preview-illustration.svg",
+  "mark": "terraform-mark.svg"
+}

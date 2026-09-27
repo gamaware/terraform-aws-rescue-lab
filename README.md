@@ -1,180 +1,193 @@
 # terraform-aws-rescue-lab
 
+**A Terraform rescue from diagnosis to repair: ranked findings from read-only checks, fix PRs, and a local-to-S3
+state migration that destroys 0 resources.**
+
 [![ci](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml)
-[![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.10-7B42BC)](after/envs/prod/versions.tf)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Lab: fictional client](https://img.shields.io/badge/lab-fictional%20client-lightgrey)
 
-**Terraform diagnostic and repair: read-only checks, ranked findings, fix PRs, and a local-to-S3 state migration
-with 0 resources destroyed.**
+![Terraform on AWS audit and fix](docs/assets/cover.png)
 
-> **Demonstration repository. The client, "Harbor Goods", is fictional.** Every account ID, bucket name and email
-> address is a placeholder. The inherited code in `before/` is insecure on purpose.
-
-| Start here | What it is |
-| --- | --- |
-| [`report/REPORT.md`](report/REPORT.md) | The deliverable: 10 findings ranked by risk, with evidence, fix, repair order and scope |
-| [`before/`](before/) | The inherited codebase: local state, copy-pasted environments, public bucket, `*:*` IAM |
-| [`after/`](after/) | The repaired codebase: one tested module, thin environment roots, S3 backend |
-| [`migration/`](migration/README.md) | The state migration runbook, with real plan output and rollback |
-| [`docs/adr/`](docs/adr/README.md) | Six architecture decision records |
+> **Lab with a fictional client.** The client, "Harbor Goods," does not exist. Account `123456789012` serves as the AWS
+> documentation placeholder; all bucket names and email addresses are fictional. Security flaws in the inherited
+> `before/` code are deliberate.
 
 ## What this proves
 
-- **Diagnosis without write access.** Findings come from Checkov, tflint and `terraform plan`. In an engagement the
-  plans run with a read-only OIDC role; here they run against a local emulator. Nothing in this repository can change
-  the client's account ([ADR 0001](docs/adr/0001-read-only-diagnosis.md)).
-- **Findings a client can act on.** Each has a file and line, tool output as evidence, the business risk and the fix,
-  ranked by risk, followed by a repair order and an explicit out-of-scope list.
-- **Refactoring without destroying anything.** Two copy-pasted folders become one module and two thin roots. `moved`,
-  `removed` and `import` blocks carry the old state across: the prod plan reads
+- **Diagnosis without write access.** Checkov, tflint and `terraform plan` supply the findings. Engagement plans use a
+  read-only OIDC role; this lab uses a local emulator. The repository has no capability to modify the client's account
+  ([ADR 0001](docs/adr/0001-read-only-diagnosis.md)).
+- **Findings a client can act on.** The report assigns severity to 10 findings: 2 critical, 3 high, 4 medium and 1 low.
+  For each, it supplies the file and line, supporting tool output, business risk and remedy. A repair sequence and
+  explicit scope exclusions follow.
+- **Refactoring without destroying anything.** One module with two thin roots replaces two duplicated folders. State
+  transfers through `moved`, `removed` and `import` blocks, producing this prod plan:
   `Plan: 1 to import, 12 to add, 7 to change, 0 to destroy.`
-- **A state migration you can replay.** Local state moves to S3 with the native lockfile, verified by comparing
-  resources before and after. The whole runbook runs against a local AWS emulator in a few minutes.
-- **A gate that catches the dangerous plan.** A `jq` check on the plan JSON fails any PR that deletes or replaces a
-  bucket or key, including the state bucket. It catches the rename in `before/prod` that would destroy prod data.
-- **Before and after, measured.** Checkov: 47 failed checks to 0. tflint: 12 issues to 0. Tests: none to 9.
+- **A gate that catches the dangerous plan.** PRs fail a `jq` check of plan JSON when they delete or replace any bucket
+  or key, including the state bucket. The check detects the `before/prod` rename that would destroy production data.
+- **Before and after, measured and asserted.** Failed Checkov checks drop from 47 to 0, tflint issues from 12 to 0, and
+  tests increase from none to 9. Any change in the Checkov or tflint counts causes `make verify` to fail.
 
-## How it fits together
+## Inspect the deliverable
 
-```mermaid
-flowchart LR
-    subgraph repo[This repository]
-        before[before/<br/>inherited code]
-        report[report/<br/>ranked findings]
-        after[after/<br/>module + thin roots]
-    end
+| Artifact | What it is |
+| --- | --- |
+| [`report/REPORT.md`](report/REPORT.md) ([PDF](report/REPORT.pdf)) | The diagnosis: 10 findings ranked by risk, with evidence, fix, repair order and scope |
+| [`before/`](before/) | The inherited codebase: local state, copy-pasted environments, public bucket, `*:*` IAM |
+| [`after/`](after/) | The repaired codebase: one tested module, thin environment roots, S3 backend |
+| [`migration/README.md`](migration/README.md) | The state migration runbook, with real plan output, checkpoints and rollback |
+| [`scripts/check-plan.sh`](scripts/check-plan.sh) | The plan gate that blocks deletes and replacements of stateful resources |
+| [`examples/workflows/`](examples/workflows/) | Plan-on-PR and weekly drift workflows for the client's CI, with the read-only role |
 
-    subgraph ci[GitHub Actions]
-        scans[Checkov, tflint,<br/>validate, test]
-        plan[terraform plan<br/>per root]
-        gate{{plan gate<br/>no stateful deletes}}
-    end
+## Scenario and acceptance criteria
 
-    subgraph aws[Client AWS account]
-        role[plan role<br/>read-only]
-        state[(S3 state bucket<br/>native lockfile)]
-        res[buckets, key, role]
-    end
+Fictional mid-size retailer Harbor Goods uses S3 for product images, managed through separate `dev` and `prod` Terraform
+folders. The folders have diverged, state sits on an engineer's laptop, and no one wants to execute the next `apply`.
+The requested audit and repair have three conditions: read-only access during diagnosis, no destruction or recreation in
+production, and every change applied by the client's engineers.
 
-    laptop[(laptop<br/>terraform.tfstate)]
-    client([client engineer])
+Completion requires the following:
 
-    before -->|scanned: findings are evidence| scans
-    scans -->|evidence| report
-    report -->|one fix PR per finding group| after
-    after -->|pull request| plan
-    plan -->|OIDC token| role
-    role -. reads .-> state
-    role -. reads .-> res
-    plan -->|plan JSON| gate
-    gate -->|plan comment on PR| client
-    laptop -->|init -migrate-state| state
-    client -->|applies after review| res
-```
+| Criterion | How it is checked |
+| --- | --- |
+| Every finding is ranked and traceable to a file, line and tool output | `make findings` compares the scans with `report/evidence/` and the IDs the report cites |
+| The repaired code has no Checkov failures and no tflint issues | `make findings` |
+| The module rejects the inputs that caused the findings | `terraform test`: 9 runs, including rejected inputs |
+| Prod state moves to S3 with the same resources and attributes | `make demo`, runbook step 4 |
+| The full repair plan destroys nothing | `make demo`: `0 to destroy`, plan gate passes |
+| A second plan after the apply shows no changes | `make demo`, runbook step 8 |
 
-**Key:** rectangles are code or jobs, cylinders hold state, the hexagon is a blocking check, the rounded box is a
-person. Solid arrows move code, data or approval; dotted arrows are read-only access.
+## Architecture
 
-## Repository layout
+![Terraform rescue context view](docs/diagrams/rescue-context.png)
 
-```text
-before/dev, before/prod        inherited roots, local state, kept as received (valid, insecure)
-after/bootstrap                state bucket (KMS, versioned, TLS-only), GitHub OIDC provider, read-only plan role
-after/modules/app-storage      the module: main.tf, variables.tf (validated), outputs.tf, examples/basic, tests/
-after/envs/dev, after/envs/prod  thin roots: S3 backend with use_lockfile, moved.tf, imports.tf (prod)
-migration/                     runbook and demo/run-local-demo.sh (moto)
-report/                        REPORT.md
-scripts/                       check-plan.sh (plan gate) and its fixture tests
-docs/adr/                      decision records 0001-0006
-.github/workflows/             ci.yml
-examples/workflows/            plan.yml, drift.yml for the client's CI (read-only OIDC plan, weekly drift)
-```
+CI scans the inherited code, supplying all results as report evidence (1, 2). Findings are grouped into separate pull
+requests targeting `after/` (3). For each PR, the client's CI assumes a read-only role through GitHub OIDC to run the
+plan; the gate rejects stateful deletes (4, 5). Migration transfers the local state file to the new S3 bucket using
+`terraform init -migrate-state` (6). A named client engineer then applies each reviewed plan (7). A second diagram,
+[`docs/diagrams/state-migration.png`](docs/diagrams/state-migration.png), details each migration step. The adjacent
+`.drawio` files contain the diagram sources.
 
-## Run it
+## Verify locally
 
-### Offline, no AWS account
+Verification requires no AWS account. The prerequisites below include the versions used to record the evidence:
 
-Needs Terraform 1.10 or later, tflint, Checkov, jq and, for the migration demo, `uv`.
+| Tool | Version |
+| --- | --- |
+| Terraform | 1.10 or later (CI uses 1.14.5) |
+| tflint | 0.61.0, AWS ruleset 0.49.0 (installed by `tflint --init`) |
+| Checkov | 3.2.529 |
+| pandoc | 3.11 (the PDF check compares bytes) |
+| uv | any recent version; it fetches Typst 0.14.1 for the PDF and moto 5.2.3 for the demo |
+| jq, shellcheck, shellharden | any recent version |
 
 ```bash
-# The findings
-checkov -d before --framework terraform --compact --quiet
-tflint --init && tflint --recursive --chdir=before --config="$PWD/.tflint.hcl"
-
-# The repaired code is clean
-checkov -d after --config-file .checkov.yaml
-tflint --recursive --chdir=after --config="$PWD/.tflint.hcl"
-terraform -chdir=after/modules/app-storage init -backend=false && terraform -chdir=after/modules/app-storage test
-
-# The plan gate
-scripts/tests/test-check-plan.sh
-
-# The full migration against moto (second terminal for the emulator)
-MOTO_IAM_LOAD_MANAGED_POLICIES=true uvx --from 'moto[server,proxy]==5.2.3' moto_proxy -p 5005
-migration/demo/run-local-demo.sh
+make verify
 ```
 
-### Against a real AWS account
+Verification covers tool versions, `terraform fmt`, `validate` across all seven roots, `terraform test`, and assertions
+for the findings in `before/` and `after/`. It also checks plan gate fixtures, shell lint and agreement between
+`report/REPORT.pdf` and its Markdown source. With providers cached, the run takes roughly a minute and finishes with:
 
-1. Apply `after/bootstrap` with local admin credentials and move its state into the new bucket
-   ([runbook step 1](migration/README.md#1-bootstrap-the-state-bucket)).
-2. Set repository variables `AWS_PLAN_ROLE_ARN`, `TF_STATE_BUCKET` and `AWS_REGION`
-   (for example `arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/rescue-lab-github-plan`).
-3. Open a pull request that touches `after/`. `plan.yml` plans each root with the read-only role, runs the plan gate
-   and posts one comment per root.
-4. Apply from a workstation or the client's pipeline, following the runbook. This repository has no apply job by
-   design.
+```text
+pass  before/ matches report/evidence/before-checkov.txt (47 findings)
+pass  before/ matches report/evidence/before-tflint.txt (12 findings)
+pass  after/ Checkov: Passed checks: 176, Failed checks: 0, Skipped checks: 21
+pass  after/ tflint: 0 issues
+...
+pass  report/REPORT.pdf matches report/REPORT.md
+verify: all checks passed
+```
 
-## CI
+To replay the complete prod migration against moto, `make demo` launches the emulator on localhost, executes
+[`migration/demo/run-local-demo.sh`](migration/demo/run-local-demo.sh), then shuts the emulator down. The replay takes a
+few minutes.
 
-| Workflow | Trigger | Blocks merge on |
+### Optional live test
+
+In a real AWS account, `make test-live` applies the module and verifies behavior that mocked tests assume: blocked
+public access, SSE-KMS, versioning, disabled ACLs and a role policy without wildcards. An exit trap then destroys
+everything, followed by a check that no resources tagged `purpose=portfolio-test` remain. Before proceeding, it uses the
+`dev` profile to display the account returned by `aws sts get-caller-identity` and requests confirmation. Only the
+maintainer runs this test; CI never does. Its output must never be committed. The cost covers two S3 buckets and one KMS
+key for a few minutes.
+
+## Repository map
+
+```text
+before/dev, before/prod          inherited roots with local state, kept as received (valid, insecure)
+after/bootstrap                  state bucket (KMS, versioned, TLS-only), GitHub OIDC provider, read-only plan role
+after/modules/app-storage        the module: validated inputs, examples/basic, tests/ (mocked terraform test)
+after/envs/dev, after/envs/prod  thin roots: S3 backend with use_lockfile, moved.tf, imports.tf (prod)
+migration/                       runbook and demo/run-local-demo.sh (moto)
+report/                          REPORT.md, REPORT.pdf (generated), evidence/ (scanner results the report cites)
+scripts/                         plan gate, findings assertion, PDF build, demo runner, live test
+examples/workflows/              plan.yml and drift.yml for the client's CI
+docs/adr/, docs/diagrams/        decision records 0001-0008; diagram sources and exports
+```
+
+## Decisions and trade-offs
+
+| ADR | Decision | Status |
 | --- | --- | --- |
-| `ci.yml` | PR, push to `main` | fmt, validate (all roots, including `before/`), `terraform test`, tflint and Checkov on `after/`, plan gate fixtures, actionlint, zizmor |
-| `ci.yml` / `before-findings` | PR, push to `main` | Nothing: scans `before/`, uploads Checkov (CLI and JUnit) and tflint reports as the `before-findings` artifact |
-| `plan.yml` | PR touching `after/` | Plan errors and the plan gate, per root, with the read-only OIDC role |
-| `drift.yml` | Weekly, manual | Fails the run if any root drifted from code |
+| [0001](docs/adr/0001-read-only-diagnosis.md) | Diagnose with a read-only role; no apply role in this repo | Accepted |
+| [0002](docs/adr/0002-s3-backend-native-lockfile.md) | S3 backend with the native lockfile, no DynamoDB table | Accepted |
+| [0003](docs/adr/0003-one-module-thin-roots.md) | One module, thin environment roots | Accepted |
+| [0004](docs/adr/0004-declarative-refactoring.md) | Refactor state with moved, removed and import blocks, not CLI commands | Accepted |
+| [0005](docs/adr/0005-plan-json-policy-gate.md) | Block plans that delete or replace stateful resources | Accepted |
+| [0006](docs/adr/0006-native-terraform-test.md) | Native terraform test with mock_provider instead of Terratest | Accepted |
+| [0007](docs/adr/0007-assert-intentional-findings.md) | Assert the intentional findings in before/ instead of skipping them | Accepted |
+| [0008](docs/adr/0008-no-cloud-access-in-repo-ci.md) | This repository's CI has no cloud access; AWS-facing workflows ship as examples | Accepted |
 
-Actions are pinned by commit SHA, workflows default to `permissions: {}`, checkout does not persist credentials, and
-variables reach shell steps through `env`. Checkov is a pinned pip install (3.2.529); the old container action ran an
-outdated Checkov that ignored inline skips.
+## Security and quality gates
 
-## Cost and teardown
+| Gate | Where | Why |
+| --- | --- | --- |
+| `make verify` | CI on every PR and push to `main`, and locally | fmt, validate, tests, asserted findings, plan gate, shell lint, actionlint on both workflow folders, PDF check |
+| markdownlint, lychee, Vale | CI (shared `lint-docs` workflow), pre-commit | Docs stay readable and links resolve |
+| actionlint, zizmor | CI (shared `lint-actions` workflow), pre-commit | Workflows are valid and hardened |
+| gitleaks, detect-secrets | CI (shared `secrets` workflow: gitleaks), pre-commit (both) | No credentials in history or in new commits |
+| Semgrep, Trivy, Checkov | CI (shared `security` workflow) | Semgrep and Trivy scan the whole repository, with each intentional finding in `before/` excepted by line or ID and named; Checkov scans `after/` and the workflows, and `make verify` asserts `before/` |
+| OSSF Scorecard | Push to `main`, weekly | Supply-chain posture of the repository itself |
 
-The demo against moto costs nothing. In a real account:
+Workflows default to `permissions: {}`; each job receives `contents: read`, plus `security-events: write` for the
+Scorecard upload. Third-party actions and the shared `gamaware/.github` workflows are pinned by commit SHA. Workflows
+under `.github/workflows/` have no ability to request OIDC tokens or access AWS
+([ADR 0008](docs/adr/0008-no-cloud-access-in-repo-ci.md)).
 
-| Resource | Cost |
-| --- | --- |
-| KMS keys (state, uploads) | About USD 1 per key per month, plus requests (bucket keys keep requests low) |
-| S3 buckets (state, uploads, access logs) | Storage and requests, cents for a lab |
-| IAM role, OIDC provider | Free |
+## Limits and production adaptations
 
-Tear down in reverse order with admin credentials: `terraform destroy` in `after/envs/dev` (its buckets have
-`force_destroy`), then prod after emptying its versioned buckets, then `after/bootstrap` after removing
-`prevent_destroy` from the state bucket and moving its state back to local. KMS keys wait 7 days (state) or 30 days
-(uploads) before deletion.
+- **One scenario, one account.** Actual rescues involve additional resources, state files and surprises, so the method
+  applies beyond this lab while the findings remain specific to it.
+- **The emulator is not AWS.** moto demonstrates Terraform moves, import, migration and the gate. It also permits
+  operations AWS would reject and requires a workaround described in the runbook. Proof in the real environment comes
+  from the PR plan in the client's account.
+- **Mocked tests.** Configuration and inputs are checked by `terraform test`; AWS behavior is outside those checks. The
+  disposable `make test-live` run verifies that behavior and requires manual execution.
+- **Path-pinned module.** Relative-path module references keep both environments on the same version. For staged
+  rollouts, [ADR 0003](docs/adr/0003-one-module-thin-roots.md) provides the tag-pinned alternative.
+- **No apply automation.** A diagnosis engagement deliberately leaves applies manual. A client continuing long term
+  would want an apply job gated by approval.
+- **Public images.** Resolving F1 removes direct public access. Delivering images through CloudFront falls outside
+  scope.
+- **Plans on pull requests in the client's repository.** Write access allows anyone to edit a workflow in a PR and
+  execute code using the plan role. That role has read-only permissions with explicit denials for object, parameter and
+  secret reads. Plan comments mask account IDs. Clients with many writers should require GitHub environment reviewers
+  for `plan.yml`.
+- **Cost and teardown in a real account.** Each KMS key costs about USD 1 per month, and lab S3 buckets cost cents;
+  neither the IAM role nor the OIDC provider carries a charge. Reverse the creation order for teardown: first
+  `after/envs/dev`, whose buckets use `force_destroy`; next prod, once its versioned buckets are empty; finally
+  `after/bootstrap`, after removing the state bucket's `prevent_destroy` and returning its state to local storage.
 
-## Honest limits
+## Related work
 
-- **One scenario, one account.** Real rescues have more resources, more state files and more surprises. The method
-  carries over; the finding list will not.
-- **The emulator is not AWS.** moto proves the Terraform mechanics (moves, import, migration, gate) but accepts
-  things AWS would reject, and needs one workaround documented in the runbook. The real proof is the PR plan in the
-  client's account.
-- **Mocked tests.** `terraform test` checks configuration and inputs, not AWS behavior. There is no online test in a
-  disposable account.
-- **Path-pinned module.** Both environments call the module by relative path, so they always run the same version.
-  [ADR 0003](docs/adr/0003-one-module-thin-roots.md) shows the tag-pinned form for staged rollouts.
-- **No apply automation.** Intentional for a diagnosis engagement ([ADR 0001](docs/adr/0001-read-only-diagnosis.md)),
-  but a long-term client would want an approval-gated apply job.
-- **Public images.** Closing F1 stops direct public access; serving images through CloudFront is out of scope.
-- **Plans on pull requests.** Anyone with write access can change a workflow in a PR and run code with the plan role.
-  The role is read-only and explicitly denied object, parameter and secret reads, and the plan comment masks account
-  IDs, but a client with many writers should gate `plan.yml` on a GitHub environment with reviewers.
-
-## Contributing and security
-
-See the shared [contributing guide](https://github.com/gamaware/.github/blob/main/CONTRIBUTING.md),
-[SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md).
+- The [aws-devops-portfolio](https://github.com/gamaware/aws-devops-portfolio) portfolio index links to the
+  corresponding Upwork service, "Terraform on AWS audit and fix".
+- The method is the one Alex uses in audits for ITESO and freelance clients in Guadalajara. Every finding here comes
+  from the fictional code in this repository.
+- Shared [gamaware/.github](https://github.com/gamaware/.github) files cover contributions, conduct and support. Use
+  [SECURITY.md](SECURITY.md) for security reporting and [CHANGELOG.md](CHANGELOG.md) for changes.
 
 ## License
 

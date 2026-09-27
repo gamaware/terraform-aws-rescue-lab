@@ -7,7 +7,7 @@ One-time stack, applied with local administrator credentials. It creates:
 - the GitHub OIDC identity provider
 - a read-only **plan** role that trusts pull requests and `main` of one repository
 
-There is no apply role on purpose: see [ADR 0001](../../docs/adr/0001-read-only-diagnosis.md).
+The stack creates no apply role, on purpose: see [ADR 0001](../../docs/adr/0001-read-only-diagnosis.md).
 
 The first apply runs with local state, because the bucket does not exist yet. Step 1 of
 [`migration/README.md`](../../migration/README.md) moves this stack's own state into the bucket it created, with the

@@ -1,0 +1,22 @@
+<path d="M88,88 H640" />
+<path d="M88,80 V96 M640,80 V96" />
+<rect x="88" y="136" width="152" height="92"/>
+<rect x="288" y="136" width="152" height="92"/>
+<rect x="488" y="136" width="152" height="92"/>
+<text x="104" y="172" stroke="none" fill="#FFFFFF">mod/network</text>
+<text x="304" y="172" stroke="none" fill="#FFFFFF">mod/iam</text>
+<text x="504" y="172" stroke="none" fill="#FFFFFF">mod/logs</text>
+<path d="M104,196 H224 M304,196 H424 M504,196 H624" stroke-opacity=".55"/>
+<path d="M164,228 V300 H564 V228 M364,228 V372"/>
+<circle cx="364" cy="300" r="6" fill="#FFFFFF"/>
+<ellipse cx="364" cy="392" rx="92" ry="22"/>
+<path d="M272,392 V476 A92,22 0 0 0 456,476 V392"/>
+<path d="M272,432 A92,22 0 0 0 456,432" stroke-opacity=".55"/>
+<path d="M456,440 H488"/>
+<text x="496" y="446" stroke="none" fill="#FFFFFF">terraform.tfstate</text>
+<circle cx="564" cy="182" r="86" stroke="#FFC34D" stroke-width="3" stroke-dasharray="10 10" fill="none"/>
+<path d="M626,242 L660,276" stroke="#FFC34D" stroke-width="3"/>
+<circle cx="672" cy="288" r="16" fill="#FFC34D" stroke="none"/>
+<text x="672" y="294" text-anchor="middle" stroke="none" fill="#1F1F1F">1</text>
+<rect x="480" y="540" width="160" height="52"/>
+<text x="560" y="572" text-anchor="middle" stroke="none" fill="#FFFFFF">READ-ONLY</text>
