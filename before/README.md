@@ -1,7 +1,7 @@
 # before/
 
 The inherited codebase, kept as received from the fictional client "Harbor Goods". It is intentionally wrong: every
-problem here is a numbered finding in [`report/diagnostic-report.md`](../report/diagnostic-report.md), and
+problem here is a numbered finding in [`report/REPORT.md`](../report/REPORT.md), and
 [`after/`](../after/) is the repaired version.
 
 ```text

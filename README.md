@@ -1,7 +1,6 @@
 # terraform-aws-rescue-lab
 
 [![ci](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml)
-[![plan](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/plan.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/plan.yml)
 [![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.10-7B42BC)](after/envs/prod/versions.tf)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -13,7 +12,7 @@ with 0 resources destroyed.**
 
 | Start here | What it is |
 | --- | --- |
-| [`report/diagnostic-report.md`](report/diagnostic-report.md) | The deliverable: 10 findings ranked by risk, with evidence, fix, repair order and scope |
+| [`report/REPORT.md`](report/REPORT.md) | The deliverable: 10 findings ranked by risk, with evidence, fix, repair order and scope |
 | [`before/`](before/) | The inherited codebase: local state, copy-pasted environments, public bucket, `*:*` IAM |
 | [`after/`](after/) | The repaired codebase: one tested module, thin environment roots, S3 backend |
 | [`migration/`](migration/README.md) | The state migration runbook, with real plan output and rollback |
@@ -84,10 +83,11 @@ after/bootstrap                state bucket (KMS, versioned, TLS-only), GitHub O
 after/modules/app-storage      the module: main.tf, variables.tf (validated), outputs.tf, examples/basic, tests/
 after/envs/dev, after/envs/prod  thin roots: S3 backend with use_lockfile, moved.tf, imports.tf (prod)
 migration/                     runbook and demo/run-local-demo.sh (moto)
-report/                        diagnostic-report.md
+report/                        REPORT.md
 scripts/                       check-plan.sh (plan gate) and its fixture tests
 docs/adr/                      decision records 0001-0006
-.github/workflows/             ci.yml, plan.yml, drift.yml
+.github/workflows/             ci.yml
+examples/workflows/            plan.yml, drift.yml for the client's CI (read-only OIDC plan, weekly drift)
 ```
 
 ## Run it
@@ -173,7 +173,8 @@ Tear down in reverse order with admin credentials: `terraform destroy` in `after
 
 ## Contributing and security
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md).
+See the shared [contributing guide](https://github.com/gamaware/.github/blob/main/CONTRIBUTING.md),
+[SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

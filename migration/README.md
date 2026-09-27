@@ -2,7 +2,7 @@
 
 Moves `before/prod` from a local `terraform.tfstate` to the S3 backend used by `after/envs/prod`, then applies the
 refactor with `moved`, `removed` and `import` blocks. Dev follows the same steps with `after/envs/dev` and its own key.
-Findings F3, F4 and F9 in the [diagnostic report](../report/diagnostic-report.md) explain why.
+Findings F3, F4 and F9 in the [diagnostic report](../report/REPORT.md) explain why.
 
 Every excerpt below is real output from [`demo/run-local-demo.sh`](demo/run-local-demo.sh), which replays the whole
 runbook against [moto](https://github.com/getmoto/moto), a local AWS emulator. Run it yourself; it needs no AWS

@@ -1,5 +1,5 @@
 # Inherited code, kept exactly as received. Do not fix it here: every problem
-# in this file is a finding in report/diagnostic-report.md, and after/ holds
+# in this file is a finding in report/REPORT.md, and after/ holds
 # the repaired version.
 
 terraform {

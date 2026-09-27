@@ -34,7 +34,9 @@ applied by the client, through their own reviewed pipeline or by a named enginee
 ## Compliance
 
 - `after/bootstrap/iam.tf` defines exactly one `aws_iam_role`; review blocks any second role.
-- Every workflow in `.github/workflows/` assumes `vars.AWS_PLAN_ROLE_ARN` only; zizmor and actionlint run on each PR.
+- The workflows that reach AWS (`examples/workflows/plan.yml` and `drift.yml`, installed in the client's CI) assume
+  `vars.AWS_PLAN_ROLE_ARN` only. This repository's own CI has no AWS access at all. zizmor and actionlint run on
+  both folders on each PR.
 - The plan job's trust subject is checked by AWS on every run: a job outside `pull_request` or `main` cannot assume it.
 
 ## Notes

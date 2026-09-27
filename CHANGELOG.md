@@ -9,7 +9,7 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
 
 - `before/`: inherited Harbor Goods codebase with local state, copy-pasted environments, a public bucket, a wildcard
   IAM policy and a rename that would destroy the prod bucket.
-- `report/diagnostic-report.md`: ten findings ranked by risk, with tool evidence, fix and repair order.
+- `report/REPORT.md`: ten findings ranked by risk, with tool evidence, fix and repair order.
 - `after/modules/app-storage` 0.1.0: private, versioned, KMS-encrypted uploads bucket, access log bucket and a
   least-privilege application role, with input validation, `examples/basic` and mocked `terraform test`.
 - `after/envs/dev` and `after/envs/prod`: thin roots with the S3 backend, `use_lockfile`, `moved`, `removed` and

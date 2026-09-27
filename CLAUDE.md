@@ -6,7 +6,7 @@ local state to S3. The client ("Harbor Goods") is fictional.
 ## Layout rules
 
 - `before/` is evidence. Do not fix it. It must stay valid Terraform and keep its Checkov and tflint findings. If it
-  changes, update the finding numbers, line references and counts in `report/diagnostic-report.md`.
+  changes, update the finding numbers, line references and counts in `report/REPORT.md`.
 - `after/` must stay at zero Checkov failures, zero tflint issues and green `terraform test`. Checkov skips go inline
   with a reason, never in `.checkov.yaml`.
 - Resource names in `after/modules/app-storage` must match the names `before/` created, or `moved` blocks turn into

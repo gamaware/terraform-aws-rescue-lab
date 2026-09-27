@@ -5,7 +5,7 @@
 #   terraform init -backend=false
 #   terraform test
 #
-# Each run checks a risk from report/diagnostic-report.md, not a restatement of
+# Each run checks a risk from report/REPORT.md, not a restatement of
 # the code: public exposure, missing encryption, wildcard IAM, names that would
 # force a replacement, and inputs that must be rejected.
 

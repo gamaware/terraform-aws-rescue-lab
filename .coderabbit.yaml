@@ -10,7 +10,7 @@ reviews:
   path_instructions:
     - path: "before/**"
       instructions: >-
-        Inherited code kept insecure on purpose as evidence for report/diagnostic-report.md. Do not suggest fixes
+        Inherited code kept insecure on purpose as evidence for report/REPORT.md. Do not suggest fixes
         here. Flag only changes that would break terraform validate or change a finding without updating the report.
     - path: "after/**/*.tf"
       instructions: >-
