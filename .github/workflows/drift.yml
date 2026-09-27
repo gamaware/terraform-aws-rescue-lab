@@ -10,18 +10,21 @@ permissions: {}
 env:
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
-  WORKDIR: envs/sandbox
 
 jobs:
   drift:
-    name: detect drift
+    name: drift ${{ matrix.root }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [after/bootstrap, after/envs/dev, after/envs/prod]
     permissions:
       contents: read
       id-token: write
     env:
-      TF_VAR_region: ${{ vars.AWS_REGION || 'us-east-1' }}
-      TF_VAR_budget_alert_emails: ${{ secrets.BUDGET_ALERT_EMAIL && format('["{0}"]', secrets.BUDGET_ALERT_EMAIL) || '[]' }}
+      ROOT: ${{ matrix.root }}
+      TF_VAR_github_repository: ${{ github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,25 +46,25 @@ jobs:
         env:
           STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
           AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-        run: terraform -chdir="$WORKDIR" init -backend-config="bucket=$STATE_BUCKET" -backend-config="region=$AWS_REGION"
+        run: terraform -chdir="$ROOT" init -backend-config="bucket=$STATE_BUCKET" -backend-config="region=$AWS_REGION"
 
       - name: terraform plan
         run: |
           set +e
-          terraform -chdir="$WORKDIR" plan -no-color -lock-timeout=5m -detailed-exitcode > plan.txt 2>&1
+          terraform -chdir="$ROOT" plan -no-color -lock-timeout=5m -detailed-exitcode > plan.txt 2>&1
           code=$?
           set -e
           cat plan.txt
           case "$code" in
-            0) echo "### No drift in envs/sandbox" >> "$GITHUB_STEP_SUMMARY" ;;
+            0) echo "### No drift in $ROOT" >> "$GITHUB_STEP_SUMMARY" ;;
             2)
               {
-                echo "### Drift detected in envs/sandbox"
+                echo "### Drift detected in $ROOT"
                 echo '```text'
                 grep -E '^\s*[#~+-]|Plan:' plan.txt || true
                 echo '```'
               } >> "$GITHUB_STEP_SUMMARY"
-              echo "::error::Drift detected in envs/sandbox. Read the job summary."
+              echo "::error::Drift detected in $ROOT. Read the job summary."
               exit 1
               ;;
             *) exit "$code" ;;

@@ -1,0 +1,6 @@
+region            = "us-east-1"
+name_prefix       = "rescue-lab"
+github_repository = "YOUR_GITHUB_OWNER/terraform-aws-rescue-lab"
+
+# Set to false if the account already has the token.actions.githubusercontent.com provider.
+create_oidc_provider = true

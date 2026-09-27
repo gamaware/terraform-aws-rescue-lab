@@ -1,7 +1,0 @@
-region            = "us-east-1"
-name_prefix       = "baseline-lab"
-github_repository = "YOUR_GITHUB_OWNER/terraform-aws-baseline-lab"
-apply_environment = "production"
-
-# Set to false if the account already has the token.actions.githubusercontent.com provider.
-create_oidc_provider = true

@@ -1,0 +1,146 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  CHECKOV_VERSION: "3.2.529"
+
+jobs:
+  terraform:
+    name: fmt, validate, test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.14.5
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      # before/ is validated too: it must stay parseable for the scanners.
+      - name: terraform validate
+        run: |
+          for dir in before/dev before/prod after/bootstrap after/envs/dev after/envs/prod \
+            after/modules/app-storage after/modules/app-storage/examples/basic; do
+            echo "::group::$dir"
+            terraform -chdir="$dir" init -backend=false
+            terraform -chdir="$dir" validate
+            echo "::endgroup::"
+          done
+
+      - name: terraform test
+        run: terraform -chdir=after/modules/app-storage test
+
+  scan-after:
+    name: tflint, checkov, plan gate tests (after/)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef # v6.3.1
+        with:
+          tflint_version: v0.61.0
+
+      - name: tflint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          tflint --init --config="$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --recursive --chdir=after --config="$GITHUB_WORKSPACE/.tflint.hcl"
+
+      # A pinned pip install instead of the old container action, which ran an
+      # outdated Checkov that ignored the inline skips.
+      - name: checkov
+        run: |
+          pipx install "checkov==$CHECKOV_VERSION"
+          checkov --directory after --config-file .checkov.yaml
+
+      - name: plan gate tests
+        run: |
+          shellcheck scripts/*.sh scripts/tests/*.sh migration/demo/*.sh
+          scripts/tests/test-check-plan.sh
+
+  workflows:
+    name: actionlint, zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        run: |
+          pipx install "actionlint-py==1.7.12.25"
+          actionlint
+
+      - name: zizmor
+        run: |
+          pipx install "zizmor==1.30.1"
+          zizmor --format=github .github/workflows
+
+  before-findings:
+    # Non-blocking on purpose: before/ is the inherited code and its findings
+    # are the evidence for report/diagnostic-report.md.
+    name: before/ findings (report only)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: terraform-linters/setup-tflint@1cf010d3c7aef302051ccdb68c14c5dc2efa34ef # v6.3.1
+        with:
+          tflint_version: v0.61.0
+
+      - name: scan before/
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          pipx install "checkov==$CHECKOV_VERSION"
+          mkdir -p findings
+          checkov --directory before --framework terraform --soft-fail --compact \
+            --output cli --output junitxml --output-file-path findings/checkov.txt,findings/checkov.xml
+          tflint --init --config="$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --recursive --chdir=before --config="$GITHUB_WORKSPACE/.tflint.hcl" --format=compact \
+            > findings/tflint.txt || true
+          {
+            echo "### before/ findings (expected, non-blocking)"
+            echo '```text'
+            grep -E '^Passed checks' findings/checkov.txt || true
+            head -n 1 findings/tflint.txt
+            echo '```'
+            echo "Full reports are in the \`before-findings\` artifact. See report/diagnostic-report.md."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: before-findings
+          path: findings/
+          retention-days: 30

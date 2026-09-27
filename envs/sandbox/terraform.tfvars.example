@@ -1,4 +1,0 @@
-region              = "us-east-1"
-name_prefix         = "baseline-lab"
-budget_limit_usd    = 20
-budget_alert_emails = ["alerts@example.com"]

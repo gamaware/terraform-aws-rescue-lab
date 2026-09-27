@@ -24,7 +24,16 @@ credentials.json
 # Tooling
 .DS_Store
 .firecrawl/
+.claude-flow/
 
-# Lock files are committed for root modules only
-/.terraform.lock.hcl
-modules/**/.terraform.lock.hcl
+# Lock files are committed for the after/ roots only. before/ never had one
+# (finding F7), and modules and examples resolve providers from their caller.
+before/**/.terraform.lock.hcl
+after/modules/**/.terraform.lock.hcl
+
+# Local plan and scan output
+plan.json
+plan.txt
+checkov-before*
+tflint-before*
+backups/

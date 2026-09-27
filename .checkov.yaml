@@ -1,6 +1,7 @@
-# Checkov settings shared by pre-commit and CI.
-# Findings that do not apply to this lab are skipped inline, next to the
-# resource, with a reason. Nothing is skipped globally here.
+# Checkov settings shared by pre-commit and the blocking CI scan of after/.
+# Findings that do not apply are skipped inline, next to the resource, with a
+# reason. Nothing is skipped globally here. before/ is scanned separately and
+# never blocks: its findings are the evidence for the diagnostic report.
 compact: true
 quiet: true
 framework:
@@ -9,3 +10,4 @@ framework:
   - secrets
 skip-path:
   - .terraform
+  - before

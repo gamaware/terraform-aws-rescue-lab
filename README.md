@@ -1,225 +1,179 @@
-# terraform-aws-baseline-lab
+# terraform-aws-rescue-lab
 
-> **Personal lab / demonstration. Not client code.** Every account ID, email and repository name in this repo is a
-> placeholder.
+[![ci](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml)
+[![plan](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/plan.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/plan.yml)
+[![Terraform](https://img.shields.io/badge/terraform-%3E%3D1.10-7B42BC)](after/envs/prod/versions.tf)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A new AWS account often starts with settings made by hand and changes nobody reviews. This lab sets the account
-baseline in Terraform and puts every change through a pull request: the plan shows up as a PR comment, and nothing is
-applied until someone approves it.
+**Terraform diagnostic and repair: read-only checks, ranked findings, fix PRs, and a local-to-S3 state migration
+with 0 resources destroyed.**
 
-## What it demonstrates
+> **Demonstration repository. The client, "Harbor Goods", is fictional.** Every account ID, bucket name and email
+> address is a placeholder. The inherited code in `before/` is insecure on purpose.
 
-- **A reviewed account baseline**: S3 remote state with locking, CloudTrail, account-level S3 Block Public Access, EBS
-  encryption by default and a budget alert, all in code.
-- **Plan on every pull request**: GitHub Actions runs `terraform plan` and posts the output as a PR comment, updated
-  in place on each push.
-- **Checkov and tflint gates**: `fmt`, `validate`, `terraform test`, tflint and Checkov run in pre-commit and again in
-  CI before any plan.
-- **Keyless CI through OIDC**: no AWS keys are stored in GitHub. Each job gets a short-lived token for one role.
-- **An approval gate before apply**: apply runs only from `main`, inside a GitHub environment with required
-  reviewers, using a role that trusts only that environment.
-- **Drift detection**: a weekly scheduled plan fails if the account no longer matches the code.
+| Start here | What it is |
+| --- | --- |
+| [`report/diagnostic-report.md`](report/diagnostic-report.md) | The deliverable: 10 findings ranked by risk, with evidence, fix, repair order and scope |
+| [`before/`](before/) | The inherited codebase: local state, copy-pasted environments, public bucket, `*:*` IAM |
+| [`after/`](after/) | The repaired codebase: one tested module, thin environment roots, S3 backend |
+| [`migration/`](migration/README.md) | The state migration runbook, with real plan output and rollback |
+| [`docs/adr/`](docs/adr/README.md) | Six architecture decision records |
 
-## Architecture
+## What this proves
+
+- **Diagnosis without write access.** Findings come from Checkov, tflint and `terraform plan`. In an engagement the
+  plans run with a read-only OIDC role; here they run against a local emulator. Nothing in this repository can change
+  the client's account ([ADR 0001](docs/adr/0001-read-only-diagnosis.md)).
+- **Findings a client can act on.** Each has a file and line, tool output as evidence, the business risk and the fix,
+  ranked by risk, followed by a repair order and an explicit out-of-scope list.
+- **Refactoring without destroying anything.** Two copy-pasted folders become one module and two thin roots. `moved`,
+  `removed` and `import` blocks carry the old state across: the prod plan reads
+  `Plan: 1 to import, 12 to add, 7 to change, 0 to destroy.`
+- **A state migration you can replay.** Local state moves to S3 with the native lockfile, verified by comparing
+  resources before and after. The whole runbook runs against a local AWS emulator in a few minutes.
+- **A gate that catches the dangerous plan.** A `jq` check on the plan JSON fails any PR that deletes or replaces a
+  bucket or key, including the state bucket. It catches the rename in `before/prod` that would destroy prod data.
+- **Before and after, measured.** Checkov: 47 failed checks to 0. tflint: 12 issues to 0. Tests: none to 9.
+
+## How it fits together
 
 ```mermaid
 flowchart LR
-    dev([Developer]) -->|opens pull request| pr[Pull request]
-
-    subgraph gha[GitHub Actions]
-        direction TB
-        subgraph planlane[Plan lane: pull_request]
-            direction LR
-            checks["fmt / validate / test<br/>tflint / Checkov"] --> oidcP{{OIDC token}}
-            oidcP --> planRole[plan role<br/>read-only]
-            planRole --> tfplan[terraform plan]
-        end
-        subgraph applylane[Apply lane: push to main]
-            direction LR
-            gate{{Environment<br/>approval}} --> oidcA{{OIDC token}}
-            oidcA --> applyRole[apply role<br/>scoped write]
-            applyRole --> tfapply[terraform apply]
-        end
+    subgraph repo[This repository]
+        before[before/<br/>inherited code]
+        report[report/<br/>ranked findings]
+        after[after/<br/>module + thin roots]
     end
 
-    pr --> checks
-    tfplan -->|plan as comment| pr
-    pr -->|merge| gate
-
-    subgraph aws[AWS account]
-        direction TB
-        state[(S3 state bucket<br/>+ lock file, KMS)]
-        trail[CloudTrail<br/>multi-region]
-        bpa[S3 Block Public Access<br/>account level]
-        ebs[EBS encryption<br/>by default]
-        budget[AWS Budgets<br/>+ SNS alert]
+    subgraph ci[GitHub Actions]
+        scans[Checkov, tflint,<br/>validate, test]
+        plan[terraform plan<br/>per root]
+        gate{{plan gate<br/>no stateful deletes}}
     end
 
-    tfplan -. reads .-> state
-    tfapply --> state
-    tfapply --> trail
-    tfapply --> bpa
-    tfapply --> ebs
-    tfapply --> budget
+    subgraph aws[Client AWS account]
+        role[plan role<br/>read-only]
+        state[(S3 state bucket<br/>native lockfile)]
+        res[buckets, key, role]
+    end
+
+    laptop[(laptop<br/>terraform.tfstate)]
+    client([client engineer])
+
+    before -->|scanned: findings are evidence| scans
+    scans -->|evidence| report
+    report -->|one fix PR per finding group| after
+    after -->|pull request| plan
+    plan -->|OIDC token| role
+    role -. reads .-> state
+    role -. reads .-> res
+    plan -->|plan JSON| gate
+    gate -->|plan comment on PR| client
+    laptop -->|init -migrate-state| state
+    client -->|applies after review| res
 ```
 
-**Plan lane.** A pull request against `main` starts `plan.yml`. The `checks` job needs no AWS access: it runs
-`terraform fmt`, `validate` on every root, `terraform test` with a mocked provider, tflint and Checkov. When those
-pass, the `plan` job asks GitHub for an OIDC token, assumes the read-only plan role, runs `terraform plan` against
-the real state and posts the result on the pull request. Pull requests from forks stop after the checks, because
-GitHub does not give them an OIDC token.
-
-**Apply lane.** Merging to `main` starts `apply.yml`. The job declares the `production` environment, so it waits
-until a required reviewer approves it. Only then does it get a token whose subject names that environment, which is
-the only subject the apply role trusts. It plans again and applies that exact plan file.
-
-**Drift lane.** `drift.yml` runs every Monday with the plan role and fails the run, with the diff in the job summary,
-if anyone changed the baseline outside Terraform.
+**Key:** rectangles are code or jobs, cylinders hold state, the hexagon is a blocking check, the rounded box is a
+person. Solid arrows move code, data or approval; dotted arrows are read-only access.
 
 ## Repository layout
 
 ```text
-bootstrap/            one-time stack: state bucket, GitHub OIDC provider, plan and apply roles
-modules/baseline/     CloudTrail, S3 Block Public Access, EBS default encryption, budget alert
-envs/sandbox/         root module that calls modules/baseline, backend config, tfvars example
-tests/                terraform test files for the baseline module (mocked provider, no credentials)
-.github/workflows/    plan.yml (pull request), apply.yml (main + environment approval), drift.yml (schedule)
-.pre-commit-config.yaml
-.tflint.hcl
-.checkov.yaml
+before/dev, before/prod        inherited roots, local state, kept as received (valid, insecure)
+after/bootstrap                state bucket (KMS, versioned, TLS-only), GitHub OIDC provider, read-only plan role
+after/modules/app-storage      the module: main.tf, variables.tf (validated), outputs.tf, examples/basic, tests/
+after/envs/dev, after/envs/prod  thin roots: S3 backend with use_lockfile, moved.tf, imports.tf (prod)
+migration/                     runbook and demo/run-local-demo.sh (moto)
+report/                        diagnostic-report.md
+scripts/                       check-plan.sh (plan gate) and its fixture tests
+docs/adr/                      decision records 0001-0006
+.github/workflows/             ci.yml, plan.yml, drift.yml
 ```
 
-## How to run it
+## Run it
 
-### Prerequisites
+### Offline, no AWS account
 
-- An AWS account you can experiment in, and local admin credentials for the one-time bootstrap
-- Terraform 1.10 or later (S3 native locking needs 1.10; CI pins 1.14.5)
-- tflint, Checkov, terraform-docs and pre-commit for the local hooks
+Needs Terraform 1.10 or later, tflint, Checkov, jq and, for the migration demo, `uv`.
 
 ```bash
-pre-commit install
-pre-commit run --all-files
+# The findings
+checkov -d before --framework terraform --compact --quiet
+tflint --init && tflint --recursive --chdir=before --config="$PWD/.tflint.hcl"
+
+# The repaired code is clean
+checkov -d after --config-file .checkov.yaml
+tflint --recursive --chdir=after --config="$PWD/.tflint.hcl"
+terraform -chdir=after/modules/app-storage init -backend=false && terraform -chdir=after/modules/app-storage test
+
+# The plan gate
+scripts/tests/test-check-plan.sh
+
+# The full migration against moto (second terminal for the emulator)
+MOTO_IAM_LOAD_MANAGED_POLICIES=true uvx --from 'moto[server,proxy]==5.2.3' moto_proxy -p 5005
+migration/demo/run-local-demo.sh
 ```
 
-### 1. Bootstrap once with local credentials
+### Against a real AWS account
 
-```bash
-cd bootstrap
-cp terraform.tfvars.example terraform.tfvars   # set github_repository = "YOUR_GITHUB_OWNER/terraform-aws-baseline-lab"
-terraform init
-terraform apply
-terraform output
-```
+1. Apply `after/bootstrap` with local admin credentials and move its state into the new bucket
+   ([runbook step 1](migration/README.md#1-bootstrap-the-state-bucket)).
+2. Set repository variables `AWS_PLAN_ROLE_ARN`, `TF_STATE_BUCKET` and `AWS_REGION`
+   (for example `arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/rescue-lab-github-plan`).
+3. Open a pull request that touches `after/`. `plan.yml` plans each root with the read-only role, runs the plan gate
+   and posts one comment per root.
+4. Apply from a workstation or the client's pipeline, following the runbook. This repository has no apply job by
+   design.
 
-The outputs give you the state bucket name and two role ARNs, for example
-`arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/baseline-lab-github-plan`.
+## CI
 
-### 2. Configure the GitHub repository
+| Workflow | Trigger | Blocks merge on |
+| --- | --- | --- |
+| `ci.yml` | PR, push to `main` | fmt, validate (all roots, including `before/`), `terraform test`, tflint and Checkov on `after/`, plan gate fixtures, actionlint, zizmor |
+| `ci.yml` / `before-findings` | PR, push to `main` | Nothing: scans `before/`, uploads Checkov (CLI and JUnit) and tflint reports as the `before-findings` artifact |
+| `plan.yml` | PR touching `after/` | Plan errors and the plan gate, per root, with the read-only OIDC role |
+| `drift.yml` | Weekly, manual | Fails the run if any root drifted from code |
 
-Repository variables (Settings > Secrets and variables > Actions > Variables):
-
-| Variable | Example value |
-| --- | --- |
-| `AWS_PLAN_ROLE_ARN` | `arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/baseline-lab-github-plan` |
-| `AWS_APPLY_ROLE_ARN` | `arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/baseline-lab-github-apply` |
-| `TF_STATE_BUCKET` | `baseline-lab-tfstate-YOUR_AWS_ACCOUNT_ID` |
-| `AWS_REGION` | `us-east-1` |
-
-Repository secret (Settings > Secrets and variables > Actions > Secrets):
-
-| Secret | Example value |
-| --- | --- |
-| `BUDGET_ALERT_EMAIL` | `alerts@example.com` |
-
-The email is a secret, not a variable, because the repository is public: GitHub masks secrets in job logs, and the
-Terraform variable is marked `sensitive`, so plans and the PR comment show `(sensitive value)` instead of the address.
-
-Then create an environment named `production` with at least one required reviewer, and limit its deployment branches
-to `main`.
-
-### 3. Open a pull request
-
-Change something small in `envs/sandbox` (for example `budget_limit_usd`), push a branch and open a pull request. The
-checks run first, then the plan comment appears on the pull request. Merge it, approve the `production` deployment,
-and the apply job runs.
-
-### Run it locally instead
-
-```bash
-cd envs/sandbox
-cp backend.hcl.example backend.hcl
-cp terraform.tfvars.example terraform.tfvars
-terraform init -backend-config=backend.hcl
-terraform plan
-```
-
-## Security choices
-
-- **Separate plan and apply roles.** The plan role has `ReadOnlyAccess` plus access to the state objects, and can
-  only write `*.tflock` lock files. The apply role can write only resources whose names start with the lab prefix,
-  KMS keys tagged `Stack = baseline`, and the two account-level settings. It has no IAM permissions, so it cannot widen
-  its own access. Explicit denies stop it from changing the state bucket's settings or the state KMS key, even though
-  both share the lab prefix.
-- **Trust policies pinned to the repository.** The plan role trusts `repo:OWNER/REPO:pull_request` and
-  `repo:OWNER/REPO:ref:refs/heads/main`. The apply role trusts only `repo:OWNER/REPO:environment:production`. Because
-  that environment only accepts deployments from `main` and needs an approval, a branch or a pull request cannot
-  reach the apply role even if someone edits a workflow.
-- **No stored keys.** Credentials come from GitHub OIDC and last one hour at most.
-- **Hardened workflows.** Actions are pinned by commit SHA, `permissions` default to none and each job asks for what it
-  needs, checkout does not persist the token, and repository variables reach shell steps through `env`, never inline.
-- **Encrypted, private buckets.** State and CloudTrail buckets use KMS keys with rotation, block public access, enforce
-  bucket-owner object ownership and deny requests without TLS.
-- **Checkov findings are fixed, not muted.** The few skips are inline, next to the resource, each with a reason (for
-  example cross-region replication, which belongs in a log archive account).
-
-Known limits, kept on purpose for a single-account lab:
-
-- A plan can show resource attributes. The alert email is marked sensitive, but a real team should check what a plan
-  prints before posting it on a pull request that many people can read.
-- The apply role may tag a KMS key with `Stack = baseline`. In an account with other customer managed keys, that tag
-  would let it manage them too. Run the lab in a dedicated account, or pin the baseline key ARN in the policy after
-  the first apply.
-- The environment name `production` appears in both `apply.yml` and the bootstrap `apply_environment` variable. Change
-  them together.
+Actions are pinned by commit SHA, workflows default to `permissions: {}`, checkout does not persist credentials, and
+variables reach shell steps through `env`. Checkov is a pinned pip install (3.2.529); the old container action ran an
+outdated Checkov that ignored inline skips.
 
 ## Cost and teardown
 
-Most of the baseline is free or close to it:
+The demo against moto costs nothing. In a real account:
 
 | Resource | Cost |
 | --- | --- |
-| KMS keys (2) | About USD 1 per key per month, plus requests |
-| CloudTrail | First management-event trail is free; S3 storage for the logs |
-| S3 state and log buckets | Storage and requests, usually cents |
-| AWS Budgets | The first two budgets are free |
-| SNS email alerts | Free tier covers a lab |
-| S3 Block Public Access, EBS default encryption | Free |
+| KMS keys (state, uploads) | About USD 1 per key per month, plus requests (bucket keys keep requests low) |
+| S3 buckets (state, uploads, access logs) | Storage and requests, cents for a lab |
+| IAM role, OIDC provider | Free |
 
-Tear down in reverse order, with local admin credentials:
+Tear down in reverse order with admin credentials: `terraform destroy` in `after/envs/dev` (its buckets have
+`force_destroy`), then prod after emptying its versioned buckets, then `after/bootstrap` after removing
+`prevent_destroy` from the state bucket and moving its state back to local. KMS keys wait 7 days (state) or 30 days
+(uploads) before deletion.
 
-```bash
-# 1. The baseline. The CloudTrail bucket keeps its logs unless force_destroy_trail_bucket is true.
-cd envs/sandbox
-terraform destroy
+## Honest limits
 
-# 2. The bootstrap stack. Remove prevent_destroy from aws_s3_bucket.state first,
-#    then empty the versioned state bucket (all versions) before destroying it.
-cd ../../bootstrap
-terraform destroy
-```
+- **One scenario, one account.** Real rescues have more resources, more state files and more surprises. The method
+  carries over; the finding list will not.
+- **The emulator is not AWS.** moto proves the Terraform mechanics (moves, import, migration, gate) but accepts
+  things AWS would reject, and needs one workaround documented in the runbook. The real proof is the PR plan in the
+  client's account.
+- **Mocked tests.** `terraform test` checks configuration and inputs, not AWS behavior. There is no online test in a
+  disposable account.
+- **Path-pinned module.** Both environments call the module by relative path, so they always run the same version.
+  [ADR 0003](docs/adr/0003-one-module-thin-roots.md) shows the tag-pinned form for staged rollouts.
+- **No apply automation.** Intentional for a diagnosis engagement ([ADR 0001](docs/adr/0001-read-only-diagnosis.md)),
+  but a long-term client would want an approval-gated apply job.
+- **Public images.** Closing F1 stops direct public access; serving images through CloudFront is out of scope.
+- **Plans on pull requests.** Anyone with write access can change a workflow in a PR and run code with the plan role.
+  The role is read-only and explicitly denied object, parameter and secret reads, and the plan comment masks account
+  IDs, but a client with many writers should gate `plan.yml` on a GitHub environment with reviewers.
 
-KMS keys enter a 7-day pending-deletion window instead of disappearing at once.
+## Contributing and security
 
-## What I would add for a real team
-
-- **More accounts**: one root module per account or environment (sandbox, staging, production), each with its own
-  state key and its own apply role, and the log bucket moved to a dedicated log archive account.
-- **Organization-level controls**: an AWS Organizations trail, service control policies that stop anyone from turning
-  CloudTrail off or leaving the organization, and GuardDuty, Security Hub and AWS Config enabled through delegated
-  administrators.
-- **A tagging standard**: required tags such as owner, cost center and data classification, enforced with tag policies
-  and a Checkov custom policy, so the budget can be split by team.
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
