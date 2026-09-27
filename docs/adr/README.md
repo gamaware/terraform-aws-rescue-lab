@@ -1,10 +1,9 @@
-# Architecture Decision Records
+# Architecture decision records
 
-Each record follows the format in *Fundamentals of Software Architecture*, 2nd edition, chapter 21: title, status,
-context, decision, consequences, compliance and notes. The Compliance section names the automated check that keeps
-the decision true.
+Architecture decision records follow the *Fundamentals of Software Architecture* (2nd ed.) format. The Compliance
+section names the automated check that keeps the decision true.
 
-| ADR | Title | Status |
+| Number | Title | Status |
 | --- | --- | --- |
 | [0001](0001-read-only-diagnosis.md) | Diagnose with a read-only role; no apply role in this repo | Accepted |
 | [0002](0002-s3-backend-native-lockfile.md) | S3 backend with the native lockfile, no DynamoDB table | Accepted |

@@ -1,4 +1,4 @@
-# ADR 0007: Assert the intentional findings in before/ instead of skipping them
+# 0007. Assert the intentional findings in before/ instead of skipping them
 
 ## Status
 

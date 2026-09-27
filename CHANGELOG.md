@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this repository. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+This file records all notable changes to this repository. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the module in `after/modules/app-storage` follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
@@ -16,7 +16,7 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
 - `make demo` (moto started and stopped for the migration replay) and `make test-live` (maintainer-only online test
   with guaranteed teardown).
 - Context and state migration diagrams in `docs/diagrams/`, the cover image, the social preview (spec and render), ADRs
-  0007 and 0008, `.editorconfig`, `.claude/` hooks that format edited files and protect generated ones, and an OSSF
+  0007 and 0008, `.editorconfig`, editor hooks that format edited files and protect generated ones, and an OpenSSF
   Scorecard workflow.
 - `before/`: inherited Harbor Goods codebase with local state, copy-pasted environments, a public bucket, a wildcard
   IAM policy and a rename that would destroy the prod bucket.
@@ -36,10 +36,13 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
   architecture, verification, repository map, decisions, gates, limits.
 - `report/diagnostic-report.md` renamed to `report/REPORT.md`; CODEOWNERS moved to the repository root.
 - `plan.yml` and `drift.yml` moved to `examples/workflows/`; this repository's CI has no cloud access (ADR 0008).
-- `ci.yml` is a thin caller: `make verify` plus the shared lint, secret and security workflows from
+- `ci.yml` is a thin caller: `make verify` plus the shared lint, secret, security and report workflows from
   `gamaware/.github`, pinned by commit SHA. The non-blocking `before-findings` job is replaced by the asserted findings.
 - `.checkov.yaml` no longer skips `before/`.
-
+- Every root requires Terraform 1.11 or later.
+- Harbor Goods' account is `111122223333`, the portfolio's example production account; moto runs as that account in
+  `make demo`.
+- ADRs use the `# NNNN. Title` heading; `SECURITY.md` points to the shared policy.
 - Repository renamed from `terraform-aws-baseline-lab` to `terraform-aws-rescue-lab`. The account baseline module and
   the sandbox environment were removed; `bootstrap` moved to `after/bootstrap`.
 - Checkov 3.3.19 runs through `uvx` from the Makefile, in `make verify`, pre-commit and CI, instead of the old

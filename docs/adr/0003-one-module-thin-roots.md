@@ -1,4 +1,4 @@
-# ADR 0003: One module, thin environment roots
+# 0003. One module, thin environment roots
 
 ## Status
 

@@ -1,4 +1,4 @@
-# ADR 0001: Diagnose with a read-only role; no apply role in this repo
+# 0001. Diagnose with a read-only role; no apply role in this repo
 
 ## Status
 
@@ -19,10 +19,10 @@ repository the place where changes reach AWS, which is the client's pipeline's j
 We give CI one role, `rescue-lab-github-plan`, with `ReadOnlyAccess` plus read access to the state objects and write
 access to `*.tflock` lock files only. An explicit deny stops it from reading S3 objects outside the state bucket, SSM
 parameters and Secrets Manager values, which `ReadOnlyAccess` would otherwise allow and a plan never needs. Pull
-requests and the scheduled drift check assume it through GitHub OIDC, and its trust policy names this repository's
-`pull_request` and `refs/heads/main` subjects exactly. We do not create an apply role. Fix PRs are merged here and
-applied by the client, through their own reviewed pipeline or by a named engineer following
-[`migration/README.md`](../../migration/README.md).
+requests and the scheduled drift check assume it through GitHub OIDC, and its trust policy names the client repository's
+`pull_request` and `refs/heads/main` subjects exactly ([ADR 0008](0008-no-cloud-access-in-repo-ci.md)). We do not create
+an apply role. Fix PRs are merged here and applied by the client, through their own reviewed pipeline or by a named
+engineer following [`migration/README.md`](../../migration/README.md).
 
 ## Consequences
 
@@ -43,3 +43,7 @@ applied by the client, through their own reviewed pipeline or by a named enginee
 
 Supersedes the plan/apply role split of the earlier baseline lab. Book reference: *GitHub Actions in Action*, 9.3.3
 (OIDC scoped to the exact repository).
+
+The plan role in `github-actions-aws-oidc-lab` makes the opposite choice: no lock write, and plans run with
+`-lock=false`. There, one pipeline owns the state and nothing else applies. Here, a client engineer applies by hand
+during the migration, so a plan that takes the lock fails fast instead of reading state in the middle of an apply.

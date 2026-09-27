@@ -110,6 +110,7 @@ produces this plan:
 - **Risk:** the existing bucket occupies the name required by the new bucket, preventing creation; its objects also
   prevent deletion. The apply halts after completing some of the ten operations, leaving prod inconsistent with state.
   If `force_destroy` were enabled, as it is in dev, deletion would complete and remove every uploaded object.
+- **Why High, not Critical:** the bucket's objects make the delete fail, so the apply halts before any data is lost.
 - **Fix:** suspend applies in `prod` pending migration. The move chain in `after/envs/prod/moved.tf` is
   `uploads_bucket -> uploads -> module.storage.aws_s3_bucket.this`. The plan gate rejects PRs that would delete or
   replace a bucket ([ADR 0005](../docs/adr/0005-plan-json-policy-gate.md)).

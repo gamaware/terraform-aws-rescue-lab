@@ -12,6 +12,7 @@ prod/main.tf   public uploads bucket, wildcard IAM policy, a resource rename wit
 Both folders keep their state in a local `terraform.tfstate` on one engineer's laptop, so there is no state file in
 the repository and no locking.
 
-The code must stay valid Terraform (`terraform validate` runs on it in CI), because the scanners need to parse it.
-Its Checkov and tflint findings are the point, so both tools skip this folder in the blocking checks and run on it in
-the non-blocking `before-findings` job, which uploads the reports as a build artifact.
+The code must stay valid Terraform (`terraform validate` runs on it in `make verify`), because the scanners need to
+parse it. `make findings` scans this folder with the same Checkov and tflint configuration as `after/` and fails unless
+the results match `report/evidence/` exactly
+([ADR 0007](../docs/adr/0007-assert-intentional-findings.md)).

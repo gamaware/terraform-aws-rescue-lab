@@ -1,4 +1,4 @@
-# ADR 0002: S3 backend with the native lockfile, no DynamoDB table
+# 0002. S3 backend with the native lockfile, no DynamoDB table
 
 ## Status
 

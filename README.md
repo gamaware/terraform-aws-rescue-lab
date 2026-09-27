@@ -3,15 +3,14 @@
 **A Terraform rescue from diagnosis to repair: ranked findings from read-only checks, fix PRs, and a local-to-S3
 state migration that destroys 0 resources.**
 
-[![ci](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml)
+[![CI](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/gamaware/terraform-aws-rescue-lab/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-![Lab: fictional client](https://img.shields.io/badge/lab-fictional%20client-lightgrey)
+![Lab](https://img.shields.io/badge/type-lab-5b6b7f)
 
 ![Terraform on AWS audit and fix](docs/assets/cover.png)
 
-> **Lab with a fictional client.** The client, "Harbor Goods," does not exist. Account `123456789012` serves as the AWS
-> documentation placeholder; all bucket names and email addresses are fictional. Security flaws in the inherited
-> `before/` code are deliberate.
+> **Lab.** Harbor Goods and all data here are fictional. Each repository in this portfolio is a
+> separate engagement with Harbor Goods, a fictional mid-size retailer. Account IDs are AWS documentation examples.
 
 ## What this proves
 
@@ -42,8 +41,10 @@ state migration that destroys 0 resources.**
 
 ## Scenario and acceptance criteria
 
-Fictional mid-size retailer Harbor Goods uses S3 for product images, managed through separate `dev` and `prod` Terraform
-folders. The folders have diverged, state sits on an engineer's laptop, and no one wants to execute the next `apply`.
+Harbor Goods, a fictional mid-size retailer, keeps its product images in S3 in one AWS account (`111122223333`),
+managed through separate `dev` and `prod` Terraform folders. The folders have diverged, state sits on an engineer's
+laptop, and no one wants to execute the next `apply`. The security flaws in this inherited `before/` code are
+deliberate.
 The requested audit and repair have three conditions: read-only access during diagnosis, no destruction or recreation in
 production, and every change applied by the client's engineers.
 
@@ -131,7 +132,9 @@ docs/adr/, docs/diagrams/        decision records 0001-0008; diagram sources and
 
 ## Decisions and trade-offs
 
-| ADR | Decision | Status |
+Architecture decision records follow the *Fundamentals of Software Architecture* (2nd ed.) format.
+
+| Number | Title | Status |
 | --- | --- | --- |
 | [0001](docs/adr/0001-read-only-diagnosis.md) | Diagnose with a read-only role; no apply role in this repo | Accepted |
 | [0002](docs/adr/0002-s3-backend-native-lockfile.md) | S3 backend with the native lockfile, no DynamoDB table | Accepted |
@@ -185,8 +188,9 @@ under `.github/workflows/` have no ability to request OIDC tokens or access AWS
 
 ## Related work
 
-- The [aws-devops-portfolio](https://github.com/gamaware/aws-devops-portfolio) portfolio index links to the
-  corresponding Upwork service, "Terraform on AWS audit and fix".
+- [Terraform on AWS audit and fix on Upwork](https://www.upwork.com/freelancers/~014b3520cf9e140103). The
+  [aws-devops-portfolio](https://github.com/gamaware/aws-devops-portfolio) index lists every service and its
+  repository.
 - The method is the one Alex uses in audits for ITESO and freelance clients in Guadalajara. Every finding here comes
   from the fictional code in this repository.
 - Shared [gamaware/.github](https://github.com/gamaware/.github) files cover contributions, conduct and support. Use

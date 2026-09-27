@@ -1,4 +1,4 @@
-# ADR 0005: Block plans that delete or replace stateful resources
+# 0005. Block plans that delete or replace stateful resources
 
 ## Status
 

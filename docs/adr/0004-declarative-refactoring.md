@@ -1,4 +1,4 @@
-# ADR 0004: Refactor state with moved, removed and import blocks, not CLI commands
+# 0004. Refactor state with moved, removed and import blocks, not CLI commands
 
 ## Status
 

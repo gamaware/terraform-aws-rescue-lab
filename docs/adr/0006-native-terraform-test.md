@@ -1,4 +1,4 @@
-# ADR 0006: Native terraform test with mock_provider instead of Terratest
+# 0006. Native terraform test with mock_provider instead of Terratest
 
 ## Status
 
@@ -26,7 +26,8 @@ from the diagnostic report: public access, encryption, wildcard IAM, stable name
 
 ## Compliance
 
-- The `checks` job in `.github/workflows/ci.yml` runs `terraform test` and fails the PR on any failed run.
+- The `verify` job in `.github/workflows/ci.yml` runs `make verify`, which includes `terraform test`, and fails the PR
+  on any failed run.
 
 ## Notes
 

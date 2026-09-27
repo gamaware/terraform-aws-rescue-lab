@@ -1,4 +1,4 @@
-# ADR 0008: This repository's CI has no cloud access; AWS-facing workflows ship as examples
+# 0008. This repository's CI has no cloud access; AWS-facing workflows ship as examples
 
 ## Status
 
