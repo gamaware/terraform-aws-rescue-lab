@@ -40,7 +40,7 @@ terraform test
 
 | Name | Version |
 | ---- | ------- |
-| terraform | >= 1.10.0, < 2.0.0 |
+| terraform | >= 1.11.0, < 2.0.0 |
 | aws | >= 6.0.0, < 7.0.0 |
 
 ## Providers

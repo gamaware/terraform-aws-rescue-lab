@@ -169,7 +169,7 @@ produces this plan:
 
 - **Risk:** running `terraform init` on a fresh machine selects the latest available AWS provider. A major release may
   alter resource behavior, causing an unexpected plan during an otherwise unrelated change.
-- **Fix:** set `required_version = ">= 1.10.0, < 2.0.0"` and `aws ~> 6.66` in each root. Commit lock files containing
+- **Fix:** set `required_version = ">= 1.11.0, < 2.0.0"` and `aws ~> 6.66` in each root. Commit lock files containing
   Linux and macOS hashes, and use Dependabot to submit provider upgrades through reviewed PRs.
 
 ### F8. Hardcoded values and no validation (Medium)

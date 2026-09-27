@@ -27,8 +27,8 @@ verify: tools fmt validate test findings plan-gate shell workflows report-check
 tools:
 	@$(CHECKOV) --version | tail -n 1 | grep -qx '3.3.19' || { echo "checkov 3.3.19 required"; exit 1; }
 	@$(TFLINT) --version | grep -q 'TFLint version 0.61.0' || { echo "tflint 0.61.0 required"; exit 1; }
-	@$(TERRAFORM) version -json | jq -e '.terraform_version | split(".") | (.[0] == "1" and (.[1] | tonumber) >= 10)' \
-		>/dev/null || { echo "terraform 1.10 or later required"; exit 1; }
+	@$(TERRAFORM) version -json | jq -e '.terraform_version | split(".") | (.[0] == "1" and (.[1] | tonumber) >= 11)' \
+		>/dev/null || { echo "terraform 1.11 or later required"; exit 1; }
 	@echo "pass  tool versions"
 
 ## fmt: terraform fmt check across the repository

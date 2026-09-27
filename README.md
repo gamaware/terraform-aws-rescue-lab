@@ -75,7 +75,7 @@ Verification requires no AWS account. The prerequisites below include the versio
 
 | Tool | Version |
 | --- | --- |
-| Terraform | 1.10 or later (CI uses 1.14.5) |
+| Terraform | 1.14.5 (the roots accept 1.11 or later) |
 | tflint | 0.61.0, AWS ruleset 0.49.0 (installed by `tflint --init`) |
 | Checkov | 3.3.19 (run through `uvx`, Python 3.13) |
 | pandoc | 3.11 (the PDF check compares bytes) |

@@ -17,7 +17,7 @@ The first init against existing local state follows [`migration/README.md`](../.
 
 | Name | Version |
 | ---- | ------- |
-| terraform | >= 1.10.0, < 2.0.0 |
+| terraform | >= 1.11.0, < 2.0.0 |
 | aws | ~> 6.66 |
 
 ## Modules

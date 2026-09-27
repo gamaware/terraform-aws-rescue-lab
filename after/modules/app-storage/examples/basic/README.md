@@ -8,7 +8,7 @@ example cannot silently go stale.
 
 | Name | Version |
 | ---- | ------- |
-| terraform | >= 1.10.0, < 2.0.0 |
+| terraform | >= 1.11.0, < 2.0.0 |
 | aws | ~> 6.66 |
 
 ## Modules

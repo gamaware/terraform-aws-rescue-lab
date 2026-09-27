@@ -27,7 +27,7 @@ happens, and the reviewer approves the plan, not a shell history.
 - The refactor is a normal PR with a normal plan, and it can be replayed on any copy of the state.
 - The blocks stay in the code until every copy of the old state is migrated. They are harmless afterwards.
 - `moved` cannot change a resource's type or its name in AWS. Names therefore stay exactly as before (ADR 0003).
-- Terraform 1.7 or later is required for `removed`; the roots already require 1.10.
+- Terraform 1.7 or later is required for `removed`; the roots already require 1.11.
 
 ## Compliance
 

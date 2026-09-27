@@ -15,7 +15,7 @@ migration/demo/run-local-demo.sh                                                
 
 ## Before you start
 
-- Terraform 1.10 or later, the AWS CLI, `jq`, and administrator credentials for the target account.
+- Terraform 1.11 or later, the AWS CLI, `jq`, and administrator credentials for the target account.
 - One named operator runs every step, and a second person reviews each plan.
 - Nobody else runs `terraform` against `prod` from the start of step 2 to the end of step 8.
 

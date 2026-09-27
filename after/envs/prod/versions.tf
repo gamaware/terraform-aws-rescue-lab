@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.10.0, < 2.0.0"
+  required_version = ">= 1.11.0, < 2.0.0"
 
   required_providers {
     aws = {
@@ -9,7 +9,7 @@ terraform {
   }
 
   # Partial configuration: bucket and region come from backend.hcl locally and
-  # from -backend-config flags in CI. use_lockfile needs Terraform 1.10 or later
+  # from -backend-config flags in CI. use_lockfile needs Terraform 1.11 or later
   # and replaces the DynamoDB lock table.
   backend "s3" {
     key          = "envs/prod/terraform.tfstate"

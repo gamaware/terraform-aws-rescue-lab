@@ -9,7 +9,8 @@ Accepted
 The inherited code kept state in a local `terraform.tfstate` on one laptop (finding F4). That means no locking, no
 history, no encryption at rest under the client's control, and a single point of loss. Terraform 1.10 added
 `use_lockfile` to the S3 backend: the lock is an object next to the state, written with a conditional request, so
-the DynamoDB lock table that used to be required is no longer needed. Terraform 1.11 deprecated `dynamodb_table`.
+the DynamoDB lock table that used to be required is no longer needed. Terraform 1.11 made the lockfile generally
+available and deprecated `dynamodb_table`.
 
 ## Decision
 
@@ -23,7 +24,7 @@ Backend settings that differ per account (bucket, region) stay out of the code i
 - One fewer resource to create, pay for and grant access to.
 - Every state write is a new object version, so a bad write can be rolled back from S3 (see the rollback section of
   the migration runbook).
-- Terraform 1.10 or later is required everywhere; every root declares `required_version = ">= 1.10.0, < 2.0.0"`.
+- Terraform 1.11 or later is required everywhere; every root declares `required_version = ">= 1.11.0, < 2.0.0"`.
 - The bootstrap stack has to start with local state and migrate itself, because it creates the bucket.
 
 ## Compliance
