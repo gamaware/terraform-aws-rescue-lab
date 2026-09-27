@@ -11,7 +11,8 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
   asserted findings, plan gate fixtures, shell lint, PDF check).
 - `scripts/check-findings.sh` and `report/evidence/`: `before/` must fail exactly the recorded Checkov and tflint
   findings, the report may cite only real ones, and `after/` must have none (ADR 0007).
-- `report/REPORT.pdf`, generated from `report/REPORT.md` with pandoc and Typst and checked byte for byte.
+- `report/REPORT.pdf`, generated from `report/REPORT.md` with pandoc and xelatex in the pinned `pandoc/latex` image
+  that the shared `report` workflow uses; `report/REPORT.sha256` ties the PDF to its source.
 - `make demo` (moto started and stopped for the migration replay) and `make test-live` (maintainer-only online test
   with guaranteed teardown).
 - Context and state migration diagrams in `docs/diagrams/`, the cover image, the social preview (spec and render), ADRs

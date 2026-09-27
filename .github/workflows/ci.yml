@@ -25,8 +25,6 @@ jobs:
     permissions:
       contents: read # checkout
     env:
-      PANDOC_VERSION: "3.11"
-      PANDOC_SHA256: 89d4c9d97818c62a97157f0072844e4602c6cee795bf84abd1aee7273abcda99
       SHELLHARDEN_VERSION: "4.3.2"
       SHELLHARDEN_SHA256: e81e97bc6bccff59b826d3b39328ab19b26721a236440f740ba71754531c7286
     steps:
@@ -51,16 +49,12 @@ jobs:
         with:
           enable-cache: false
 
-      # Versions match the ones the evidence and the PDF were produced with;
-      # `make tools` fails if they drift. The Makefile runs Checkov 3.3.19
-      # through uvx, so it needs no install step here.
-      - name: Install pandoc and shellharden
+      # `make tools` fails if a scanner version drifts from the one the evidence
+      # was recorded with. The Makefile runs Checkov 3.3.19 through uvx, so it
+      # needs no install step here.
+      - name: Install shellharden
         run: |
           set -euo pipefail
-          deb="pandoc-${PANDOC_VERSION}-1-amd64.deb"
-          curl -fsSL -o "$RUNNER_TEMP/$deb" "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${deb}"
-          echo "${PANDOC_SHA256}  $RUNNER_TEMP/$deb" | sha256sum --check --strict
-          sudo dpkg -i "$RUNNER_TEMP/$deb"
           archive="shellharden-x86_64-unknown-linux-gnu.tar.gz"
           curl -fsSL -o "$RUNNER_TEMP/$archive" \
             "https://github.com/anordal/shellharden/releases/download/v${SHELLHARDEN_VERSION}/${archive}"
@@ -92,11 +86,25 @@ jobs:
     permissions:
       contents: read # checkout
 
-  # Semgrep, Trivy and Checkov over the whole repository. The intentional
-  # findings in before/ are annotated or scoped to before/ one by one
-  # (nosemgrep comments, .trivyignore.yaml) and asserted by make verify.
+  # Semgrep and Trivy over the whole repository; Checkov on after/ and the
+  # workflows (.checkov.yaml). The intentional findings in before/ are
+  # annotated or scoped to before/ one by one (nosemgrep comments,
+  # .trivyignore.yaml), and make verify asserts the Checkov ones.
   security:
     name: security
     uses: gamaware/.github/.github/workflows/security.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e # pinned shared workflows
     permissions:
       contents: read # checkout
+
+  # Builds report/REPORT.pdf in the pinned pandoc/latex image. The arguments
+  # match PANDOC_ARGS in scripts/build_report.py, which builds the committed PDF.
+  report:
+    name: report
+    uses: gamaware/.github/.github/workflows/report.yml@1255caafb08b06cc4658318c4dd48f9dea946c9e # pinned shared workflows
+    permissions:
+      contents: read # checkout
+    with:
+      report-path: report/REPORT.md
+      pandoc-args: >-
+        --pdf-engine=xelatex -V geometry:margin=2.2cm -V papersize=a4 --toc --shift-heading-level-by=-1
+        -V header-includes=\RecustomVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\scriptsize}

@@ -6,8 +6,8 @@ set -euo pipefail
 file="$(jq -r '.tool_input.file_path // empty')"
 
 case "$file" in
-  */report/REPORT.pdf)
-    echo "report/REPORT.pdf is generated: edit report/REPORT.md, then run make report." >&2
+  */report/REPORT.pdf | */report/REPORT.sha256)
+    echo "report/REPORT.pdf and REPORT.sha256 are generated: edit report/REPORT.md, then run make report." >&2
     exit 2
     ;;
   */report/evidence/*)

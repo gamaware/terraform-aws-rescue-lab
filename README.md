@@ -78,17 +78,19 @@ Verification requires no AWS account. The prerequisites below include the versio
 | Terraform | 1.14.5 (the roots accept 1.11 or later) |
 | tflint | 0.61.0, AWS ruleset 0.49.0 (installed by `tflint --init`) |
 | Checkov | 3.3.19 (run through `uvx`, Python 3.13) |
-| pandoc | 3.11 (the PDF check compares bytes) |
-| uv | any recent version; it fetches Typst 0.14.1 for the PDF and moto 5.2.3 for the demo |
-| jq, shellcheck, shellharden | any recent version |
+| uv | 0.12; it fetches Python 3.13, Checkov, actionlint-py 1.7.12.25 and moto 5.2.3 (demo) |
+| shellharden | 4.3.2 |
+| jq, shellcheck | any recent version |
+| Docker | only for `make report`, which runs the pinned `pandoc/latex:3.11` image |
 
 ```bash
 make verify
 ```
 
 Verification covers tool versions, `terraform fmt`, `validate` across all seven roots, `terraform test`, and assertions
-for the findings in `before/` and `after/`. It also checks plan gate fixtures, shell lint and agreement between
-`report/REPORT.pdf` and its Markdown source. With providers cached, the run takes roughly a minute and finishes with:
+for the findings in `before/` and `after/`. It also checks plan gate fixtures, shell lint and, through the hashes in
+`report/REPORT.sha256`, that `report/REPORT.pdf` was built from the current Markdown source. With providers cached, the
+run takes roughly a minute and finishes with:
 
 ```text
 pass  before/ matches report/evidence/before-checkov.txt (47 findings)
@@ -149,7 +151,8 @@ docs/adr/, docs/diagrams/        decision records 0001-0008; diagram sources and
 | actionlint, zizmor | CI (shared `lint-actions` workflow), pre-commit | Workflows are valid and hardened |
 | gitleaks, detect-secrets | CI (shared `secrets` workflow: gitleaks), pre-commit (both) | No credentials in history or in new commits |
 | Semgrep, Trivy, Checkov | CI (shared `security` workflow) | Semgrep and Trivy scan the whole repository, with each intentional finding in `before/` excepted by line or ID and named; Checkov scans `after/` and the workflows, and `make verify` asserts `before/` |
-| OSSF Scorecard | Push to `main`, weekly | Supply-chain posture of the repository itself |
+| PDF build | CI (shared `report` workflow) | `report/REPORT.md` builds with pandoc and xelatex in the pinned image that produces the committed PDF |
+| OpenSSF Scorecard | Push to `main`, weekly | Supply-chain posture of the repository itself |
 
 Workflows default to `permissions: {}`; each job receives `contents: read`, plus `security-events: write` for the
 Scorecard upload. Third-party actions and the shared `gamaware/.github` workflows are pinned by commit SHA. Workflows

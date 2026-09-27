@@ -4,7 +4,6 @@
 TERRAFORM ?= terraform
 TFLINT ?= tflint
 CHECKOV ?= uvx --python 3.13 --from checkov==3.3.19 checkov
-TYPST_PY ?= typst==0.14.1
 MOTO ?= moto[server,proxy]==5.2.3
 ACTIONLINT_PY ?= actionlint-py==1.7.12.25
 
@@ -65,13 +64,15 @@ shell:
 workflows:
 	uvx --from '$(ACTIONLINT_PY)' actionlint .github/workflows/*.yml examples/workflows/*.yml
 
-## report-check: report/REPORT.pdf is byte-identical to a fresh build of report/REPORT.md
+## report-check: report/REPORT.pdf was built from the current report/REPORT.md (hashes in report/REPORT.sha256)
 report-check:
-	uvx --from '$(TYPST_PY)' python scripts/build_report.py --check
+	@shasum -a 256 --check --status report/REPORT.sha256 \
+		|| { echo "FAIL  report/REPORT.pdf is out of date: run make report and commit it"; exit 1; }
+	@echo "pass  report/REPORT.pdf matches report/REPORT.md"
 
-## report: rebuild report/REPORT.pdf from report/REPORT.md
+## report: rebuild report/REPORT.pdf with the pinned pandoc/latex image (needs Docker)
 report:
-	uvx --from '$(TYPST_PY)' python scripts/build_report.py
+	uv run --no-project --python 3.13 python scripts/build_report.py
 
 ## evidence: rewrite report/evidence/ from the scanners (review the diff before committing)
 evidence:

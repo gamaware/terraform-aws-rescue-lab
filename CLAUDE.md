@@ -16,8 +16,8 @@ local state to S3. The client ("Harbor Goods") is fictional.
   changing `before/prod`, `after/`, or the script, and update the excerpts.
 - `report/evidence/` is scanner output asserted by `make findings`. After a deliberate change to `before/` or a
   scanner upgrade, run `make evidence`, review the diff, and update the counts and IDs in `report/REPORT.md`.
-- `report/REPORT.pdf` is generated: edit `report/REPORT.md`, then `make report`. `make verify` compares bytes, so
-  use pandoc 3.11.
+- `report/REPORT.pdf` is generated: edit `report/REPORT.md`, then `make report` (Docker, pinned `pandoc/latex`
+  image). It also rewrites `report/REPORT.sha256`, which `make verify` checks.
 - Workflows that reach AWS live in `examples/workflows/`, never in `.github/workflows/` (ADR 0008).
 - Diagrams: edit the `.drawio` sources in `docs/diagrams/` and export with the draw.io CLI:
   `drawio -x -f svg -b 10` and `drawio -x -f png -s 1.5 -b 10`.
