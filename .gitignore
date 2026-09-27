@@ -1,0 +1,30 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+!*.tfvars.example
+backend.hcl
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+
+# Tooling
+.DS_Store
+.firecrawl/
+
+# Lock files are committed for root modules only
+/.terraform.lock.hcl
+modules/**/.terraform.lock.hcl

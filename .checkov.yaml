@@ -1,0 +1,11 @@
+# Checkov settings shared by pre-commit and CI.
+# Findings that do not apply to this lab are skipped inline, next to the
+# resource, with a reason. Nothing is skipped globally here.
+compact: true
+quiet: true
+framework:
+  - terraform
+  - github_actions
+  - secrets
+skip-path:
+  - .terraform
