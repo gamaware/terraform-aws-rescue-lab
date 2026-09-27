@@ -30,8 +30,8 @@ file and resource, plus the totals) and `report/evidence/before-tflint.txt`, and
 - Report, evidence and code cannot drift apart without a red build.
 - A scanner upgrade that adds or renames checks fails the build until the evidence and the report are updated. The
   `tools` target pins the versions the evidence was recorded with, so this happens on purpose, in one PR.
-- Pre-commit still excludes `before/` from the Checkov and tflint hooks, because those hooks fail on any finding; the
-  assertion runs in `make verify` instead.
+- Pre-commit excludes `before/` from the tflint hook, because that hook fails on any finding. Checkov runs in
+  pre-commit only through `make findings`, so both folders get the same assertion as in `make verify`.
 
 ## Compliance
 

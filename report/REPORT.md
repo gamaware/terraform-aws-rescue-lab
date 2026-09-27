@@ -18,7 +18,7 @@ produces this plan:
 
 | Tool | `before/` | `after/` |
 | --- | --- | --- |
-| Checkov 3.2.529 (Terraform) | 23 passed, **47 failed** | 176 passed, **0 failed**, 21 skipped with inline reasons |
+| Checkov 3.3.19 (Terraform) | 25 passed, **47 failed** | 178 passed, **0 failed**, 21 skipped with inline reasons |
 | tflint 0.61.0, preset `all` + AWS ruleset 0.49.0 | **12 issues** | **0 issues** |
 | `terraform validate` | valid | valid |
 | `terraform test` | none exist | 9 runs, 9 passed |

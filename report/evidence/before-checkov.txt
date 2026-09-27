@@ -1,4 +1,4 @@
-# checkov 3.2.529: passed=23 failed=47
+# checkov 3.3.19: passed=25 failed=47
 CKV2_AWS_40 /dev/main.tf aws_iam_role_policy.app
 CKV2_AWS_40 /prod/main.tf aws_iam_role_policy.app
 CKV2_AWS_6 /dev/main.tf aws_s3_bucket.uploads

@@ -77,7 +77,7 @@ Verification requires no AWS account. The prerequisites below include the versio
 | --- | --- |
 | Terraform | 1.10 or later (CI uses 1.14.5) |
 | tflint | 0.61.0, AWS ruleset 0.49.0 (installed by `tflint --init`) |
-| Checkov | 3.2.529 |
+| Checkov | 3.3.19 (run through `uvx`, Python 3.13) |
 | pandoc | 3.11 (the PDF check compares bytes) |
 | uv | any recent version; it fetches Typst 0.14.1 for the PDF and moto 5.2.3 for the demo |
 | jq, shellcheck, shellharden | any recent version |
@@ -93,7 +93,7 @@ for the findings in `before/` and `after/`. It also checks plan gate fixtures, s
 ```text
 pass  before/ matches report/evidence/before-checkov.txt (47 findings)
 pass  before/ matches report/evidence/before-tflint.txt (12 findings)
-pass  after/ Checkov: Passed checks: 176, Failed checks: 0, Skipped checks: 21
+pass  after/ Checkov: Passed checks: 178, Failed checks: 0, Skipped checks: 21
 pass  after/ tflint: 0 issues
 ...
 pass  report/REPORT.pdf matches report/REPORT.md

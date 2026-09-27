@@ -15,7 +15,8 @@ set -euo pipefail
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 evidence="$repo/report/evidence"
 report="$repo/report/REPORT.md"
-checkov="${CHECKOV:-checkov}"
+# CHECKOV may be a command with arguments, for example the pinned uvx call in the Makefile.
+read -ra checkov <<<"${CHECKOV:-checkov}"
 tflint="${TFLINT:-tflint}"
 update=false
 
@@ -33,7 +34,7 @@ trap 'rm -rf "$work"' EXIT
 cd "$repo"
 
 # Checkov on before/: one line per failed check, sorted, plus the totals.
-"$checkov" --directory before --config-file .checkov.yaml --framework terraform \
+"${checkov[@]}" --directory before --config-file .checkov.yaml --framework terraform \
   --output json --soft-fail >"$work/checkov-before.json" 2>"$work/checkov-before.err" || {
   cat "$work/checkov-before.err" >&2
   echo "checkov failed on before/" >&2
@@ -97,7 +98,7 @@ grep -q "\*\*$checkov_failed failed\*\*" "$report" || fail "report does not stat
 grep -q "\*\*$tflint_issues issues\*\*" "$report" || fail "report does not state $tflint_issues tflint issues"
 
 # after/ is the repaired code: no failures at all.
-if "$checkov" --directory after --config-file .checkov.yaml >"$work/checkov-after.txt" 2>&1; then
+if "${checkov[@]}" --directory after --config-file .checkov.yaml >"$work/checkov-after.txt" 2>&1; then
   echo "pass  after/ Checkov: $(grep -m1 -E '^Passed checks' "$work/checkov-after.txt" || echo 'no failures')"
 else
   cat "$work/checkov-after.txt"

@@ -25,7 +25,6 @@ jobs:
     permissions:
       contents: read # checkout
     env:
-      CHECKOV_VERSION: "3.2.529"
       PANDOC_VERSION: "3.11"
       PANDOC_SHA256: 89d4c9d97818c62a97157f0072844e4602c6cee795bf84abd1aee7273abcda99
       SHELLHARDEN_VERSION: "4.3.2"
@@ -53,11 +52,11 @@ jobs:
           enable-cache: false
 
       # Versions match the ones the evidence and the PDF were produced with;
-      # `make tools` fails if they drift.
-      - name: Install Checkov, pandoc and shellharden
+      # `make tools` fails if they drift. The Makefile runs Checkov 3.3.19
+      # through uvx, so it needs no install step here.
+      - name: Install pandoc and shellharden
         run: |
           set -euo pipefail
-          pipx install "checkov==${CHECKOV_VERSION}"
           deb="pandoc-${PANDOC_VERSION}-1-amd64.deb"
           curl -fsSL -o "$RUNNER_TEMP/$deb" "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${deb}"
           echo "${PANDOC_SHA256}  $RUNNER_TEMP/$deb" | sha256sum --check --strict

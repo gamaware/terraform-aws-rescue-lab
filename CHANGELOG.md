@@ -41,7 +41,8 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
 
 - Repository renamed from `terraform-aws-baseline-lab` to `terraform-aws-rescue-lab`. The account baseline module and
   the sandbox environment were removed; `bootstrap` moved to `after/bootstrap`.
-- Checkov runs from a pinned pip install (3.2.529) instead of the old container action, which ignored inline skips.
+- Checkov 3.3.19 runs through `uvx` from the Makefile, in `make verify`, pre-commit and CI, instead of the old
+  container action, which ignored inline skips.
 
 ### Removed
 

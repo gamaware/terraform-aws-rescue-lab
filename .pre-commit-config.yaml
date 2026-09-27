@@ -20,8 +20,9 @@ repos:
         args: [--branch, main]
 
   # before/ is the inherited codebase: it is formatted and validated, but its
-  # tflint and Checkov findings are the point, so these hooks (which fail on any
-  # finding) skip it. `make findings` scans it and asserts the exact findings.
+  # tflint findings are the point, so the tflint hook (which fails on any
+  # finding) skips it. Checkov runs only through `make findings` below, with the
+  # pinned 3.3.19, which asserts the exact before/ findings and zero in after/.
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.109.1
     hooks:
@@ -40,10 +41,6 @@ repos:
           - --hook-config=--add-to-existing-file=true
           - --hook-config=--create-file-if-not-exist=true
           - --args=--config=.terraform-docs.yml
-      - id: terraform_checkov
-        exclude: ^before/
-        args:
-          - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
   - repo: local
     hooks:
@@ -55,7 +52,7 @@ repos:
         files: ^after/modules/app-storage/
       - id: check-findings
         name: before/ findings match report/evidence
-        entry: scripts/check-findings.sh
+        entry: make findings
         language: system
         pass_filenames: false
         files: ^(before/|after/|report/(REPORT\.md|evidence/)|\.checkov\.yaml|\.tflint\.hcl|scripts/check-findings\.sh)
