@@ -1,7 +1,8 @@
-# Checkov settings shared by pre-commit and the blocking CI scan of after/.
-# Findings that do not apply are skipped inline, next to the resource, with a
-# reason. Nothing is skipped globally here. before/ is scanned separately and
-# never blocks: its findings are the evidence for the diagnostic report.
+# Checkov settings shared by pre-commit and `make verify`. Findings that do not
+# apply are skipped inline, next to the resource, with a reason. Nothing is
+# skipped globally here. before/ is not skipped either: `make findings` scans it
+# with this same file and asserts that it fails exactly the checks the report
+# cites (report/evidence/before-checkov.txt).
 compact: true
 quiet: true
 framework:
@@ -10,4 +11,3 @@ framework:
   - secrets
 skip-path:
   - .terraform
-  - before
