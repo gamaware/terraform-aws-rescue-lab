@@ -1,0 +1,2 @@
+# Loaded automatically by trivy from the repository root (shared security workflow).
+ignorefile: .trivyignore.yaml

@@ -2,7 +2,9 @@
 # apply are skipped inline, next to the resource, with a reason. Nothing is
 # skipped globally here. before/ is not skipped either: `make findings` scans it
 # with this same file and asserts that it fails exactly the checks the report
-# cites (report/evidence/before-checkov.txt).
+# cites (report/evidence/before-checkov.txt). The directory list below is what
+# the shared security workflow scans; a --directory flag on the command line
+# replaces it.
 compact: true
 quiet: true
 framework:
@@ -11,3 +13,7 @@ framework:
   - secrets
 skip-path:
   - .terraform
+directory:
+  - after
+  - .github/workflows
+  - examples/workflows

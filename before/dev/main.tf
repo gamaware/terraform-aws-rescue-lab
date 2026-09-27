@@ -53,7 +53,7 @@ resource "aws_s3_bucket_public_access_block" "uploads" {
 
 resource "aws_s3_bucket_acl" "uploads" {
   bucket = aws_s3_bucket.uploads.id
-  acl    = "public-read"
+  acl    = "public-read" # nosemgrep: s3-public-read-bucket (intentional, finding F1)
 
   depends_on = [
     aws_s3_bucket_ownership_controls.uploads,
@@ -100,9 +100,9 @@ resource "aws_iam_role_policy" "app" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      {
+      { # nosemgrep: no-iam-admin-privileges (intentional, finding F2)
         Effect   = "Allow"
-        Action   = "*"
+        Action   = "*" # nosemgrep: no-iam-star-actions (intentional, finding F2)
         Resource = "*"
       },
     ]

@@ -6,6 +6,7 @@ TFLINT ?= tflint
 CHECKOV ?= checkov
 TYPST_PY ?= typst==0.14.1
 MOTO ?= moto[server,proxy]==5.2.3
+ACTIONLINT_PY ?= actionlint-py==1.7.12.25
 
 TF_ROOTS := before/dev before/prod after/bootstrap after/envs/dev after/envs/prod \
 	after/modules/app-storage after/modules/app-storage/examples/basic
@@ -15,11 +16,11 @@ export TF_IN_AUTOMATION := 1
 export TF_INPUT := 0
 export CHECKOV TFLINT
 
-.PHONY: verify tools fmt validate test findings plan-gate shell report-check \
+.PHONY: verify tools fmt validate test findings plan-gate shell workflows report-check \
 	report evidence demo test-live clean help
 
-## verify: every offline check (tools, fmt, validate, test, findings, plan-gate, shell, report-check)
-verify: tools fmt validate test findings plan-gate shell report-check
+## verify: every offline check (tools, fmt, validate, test, findings, plan-gate, shell, workflows, report-check)
+verify: tools fmt validate test findings plan-gate shell workflows report-check
 	@echo "verify: all checks passed"
 
 ## tools: fail early if a scanner version differs from the one the evidence was recorded with
@@ -59,6 +60,10 @@ plan-gate:
 shell:
 	shellcheck --severity=warning $(SHELL_SCRIPTS)
 	shellharden --check $(SHELL_SCRIPTS)
+
+## workflows: actionlint on the active workflows and on the examples for the client's CI
+workflows:
+	uvx --from '$(ACTIONLINT_PY)' actionlint .github/workflows/*.yml examples/workflows/*.yml
 
 ## report-check: report/REPORT.pdf is byte-identical to a fresh build of report/REPORT.md
 report-check:
