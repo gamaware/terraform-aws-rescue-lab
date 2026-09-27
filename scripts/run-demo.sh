@@ -11,7 +11,7 @@ log="$(mktemp)"
 
 # Resolve moto once so the first download does not count against the start-up wait.
 uvx --from "$moto" python -c 'import moto' >/dev/null
-MOTO_IAM_LOAD_MANAGED_POLICIES=true uvx --from "$moto" moto_proxy -H 127.0.0.1 -p "$port" >"$log" 2>&1 &
+MOTO_ACCOUNT_ID=111122223333 MOTO_IAM_LOAD_MANAGED_POLICIES=true uvx --from "$moto" moto_proxy -H 127.0.0.1 -p "$port" >"$log" 2>&1 &
 moto_pid=$!
 trap 'kill "$moto_pid" 2>/dev/null || true; rm -f "$log"' EXIT
 

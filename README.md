@@ -62,12 +62,12 @@ Completion requires the following:
 
 ![Terraform rescue context view](docs/diagrams/rescue-context.png)
 
-CI scans the inherited code, supplying all results as report evidence (1, 2). Findings are grouped into separate pull
-requests targeting `after/` (3). For each PR, the client's CI assumes a read-only role through GitHub OIDC to run the
-plan; the gate rejects stateful deletes (4, 5). Migration transfers the local state file to the new S3 bucket using
-`terraform init -migrate-state` (6). A named client engineer then applies each reviewed plan (7). A second diagram,
-[`docs/diagrams/state-migration.png`](docs/diagrams/state-migration.png), details each migration step. The adjacent
-`.drawio` files contain the diagram sources.
+CI scans the inherited code, supplying all results as report evidence (1, 2). The fixes reach `after/` in three pull
+requests: backend, migration and refactor (3). For each PR, the client's CI assumes a read-only role through GitHub OIDC
+to run the plan; the gate rejects stateful deletes (4, 5). Migration transfers the local state file to the new S3 bucket
+using `terraform init -migrate-state` (6). A named client engineer then applies each reviewed plan (7). A second
+diagram, [`docs/diagrams/state-migration.png`](docs/diagrams/state-migration.png), details each migration step. The
+adjacent `.drawio` files contain the diagram sources.
 
 ## Verify locally
 

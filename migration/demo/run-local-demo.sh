@@ -3,7 +3,7 @@
 # emulator, so it runs without an AWS account and costs nothing. moto runs as
 # an HTTPS proxy, so the Terraform code runs unmodified: no endpoint overrides.
 #
-#   MOTO_IAM_LOAD_MANAGED_POLICIES=true \
+#   MOTO_ACCOUNT_ID=111122223333 MOTO_IAM_LOAD_MANAGED_POLICIES=true \
 #     uvx --from 'moto[server,proxy]==5.2.3' moto_proxy -p 5005    # another terminal
 #   migration/demo/run-local-demo.sh
 #
@@ -34,7 +34,9 @@ export HTTPS_PROXY="$proxy" HTTP_PROXY="$proxy" AWS_CA_BUNDLE="$ca_bundle"
 export NO_PROXY="registry.terraform.io,releases.hashicorp.com,github.com,objects.githubusercontent.com"
 export TF_IN_AUTOMATION=1 TF_INPUT=0
 
-state_bucket="rescue-lab-tfstate-123456789012"
+# moto runs as the example production account (MOTO_ACCOUNT_ID above), and
+# after/bootstrap names the state bucket after the account ID.
+state_bucket="rescue-lab-tfstate-111122223333"
 repo_var="github_repository=YOUR_GITHUB_OWNER/terraform-aws-rescue-lab"
 
 step() { printf '\n==== %s\n' "$*"; }

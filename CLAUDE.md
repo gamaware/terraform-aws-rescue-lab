@@ -19,7 +19,8 @@ local state to S3. The client ("Harbor Goods") is fictional.
 - `report/REPORT.pdf` is generated: edit `report/REPORT.md`, then `make report`. `make verify` compares bytes, so
   use pandoc 3.11.
 - Workflows that reach AWS live in `examples/workflows/`, never in `.github/workflows/` (ADR 0008).
-- Diagrams: edit the `.drawio` sources in `docs/diagrams/` and export SVG and PNG with the draw.io CLI.
+- Diagrams: edit the `.drawio` sources in `docs/diagrams/` and export with the draw.io CLI:
+  `drawio -x -f svg -b 10` and `drawio -x -f png -s 1.5 -b 10`.
 
 ## Commands
 
@@ -35,5 +36,5 @@ pre-commit run --all-files
 
 ## Content
 
-Placeholders only (`YOUR_AWS_ACCOUNT_ID`, `123456789012`). English, dateless, Conventional Commits, no AI
-attribution.
+Placeholders only (`YOUR_AWS_ACCOUNT_ID`, or `111122223333` for Harbor Goods' production account). English,
+dateless, Conventional Commits, no AI attribution.

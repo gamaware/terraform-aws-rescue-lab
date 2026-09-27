@@ -9,11 +9,12 @@
 # the code: public exposure, missing encryption, wildcard IAM, names that would
 # force a replacement, and inputs that must be rejected.
 
-# 123456789012 is the example account ID from the AWS documentation.
+# 111122223333 is the AWS documentation example ID that the portfolio uses for
+# Harbor Goods' production account.
 mock_provider "aws" {
   mock_data "aws_caller_identity" {
     defaults = {
-      account_id = "123456789012"
+      account_id = "111122223333"
     }
   }
 
@@ -32,7 +33,7 @@ mock_provider "aws" {
   # Valid ARNs so mocked applies pass provider validation.
   mock_resource "aws_kms_key" {
     defaults = {
-      arn = "arn:aws:kms:us-east-1:123456789012:key/00000000-0000-0000-0000-000000000000"
+      arn = "arn:aws:kms:us-east-1:111122223333:key/00000000-0000-0000-0000-000000000000"
     }
   }
 
@@ -44,7 +45,7 @@ mock_provider "aws" {
 
   mock_resource "aws_iam_role" {
     defaults = {
-      arn = "arn:aws:iam::123456789012:role/harbor-test-app"
+      arn = "arn:aws:iam::111122223333:role/harbor-test-app"
     }
   }
 }

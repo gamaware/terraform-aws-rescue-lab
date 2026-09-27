@@ -9,8 +9,9 @@ runbook against [moto](https://github.com/getmoto/moto), a local AWS emulator. R
 account. Hashes, lineages and key IDs change on every run; counts and plan lines do not.
 
 ```bash
-MOTO_IAM_LOAD_MANAGED_POLICIES=true uvx --from 'moto[server,proxy]==5.2.3' moto_proxy -p 5005   # terminal 1
-migration/demo/run-local-demo.sh                                                                 # terminal 2
+MOTO_ACCOUNT_ID=111122223333 MOTO_IAM_LOAD_MANAGED_POLICIES=true \
+  uvx --from 'moto[server,proxy]==5.2.3' moto_proxy -p 5005   # terminal 1
+migration/demo/run-local-demo.sh                              # terminal 2
 ```
 
 ## Before you start

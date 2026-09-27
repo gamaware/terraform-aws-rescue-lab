@@ -2,7 +2,7 @@
 
 > **This sample uses a fictional client, account and names throughout.** The review covers [`before/`](../before/) in
 > this repository. The evidence consists of actual output from the named tools, executed against that code; plans also
-> use a local AWS emulator (moto). The account number `123456789012` is the AWS documentation placeholder.
+> use a local AWS emulator (moto). The account number `111122223333` is an AWS documentation example ID.
 
 ## Summary
 
