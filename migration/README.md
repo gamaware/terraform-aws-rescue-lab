@@ -153,7 +153,7 @@ says `0 to destroy`.
 ## 7. Run the plan gate
 
 ```bash
-(umask 077 && terraform show -json tfplan > plan.json)   # plan JSON can hold secrets
+rm -f plan.json && (umask 077 && terraform show -json tfplan > plan.json)   # plan JSON can hold secrets
 ../../../scripts/check-plan.sh plan.json
 ```
 

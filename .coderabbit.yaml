@@ -15,9 +15,10 @@ reviews:
     - path: "after/**/*.tf"
       instructions: >-
         Check that resource names still match before/, that every address change has a moved block, that inputs are
-        validated and documented, and that no IAM statement uses a wildcard action or resource. The one exception is the
-        KMS key policy statement that gives the account root kms:* on "*" (the AWS default key policy, which keeps the
-        key manageable).
+        validated and documented, and that no Allow statement uses a wildcard action or resource. The one exception
+        is the KMS key policy statement that gives the account root kms:* on "*" (the AWS default key policy, which
+        keeps the key manageable). Deny statements may use wildcard actions, resources or principals (for example the
+        TLS-only bucket policies and the plan role's secret and parameter read deny), since they only remove access.
     - path: ".github/workflows/**"
       instructions: >-
         Actions pinned by full SHA, permissions: {} at workflow level, only the permissions each job needs, no inline
