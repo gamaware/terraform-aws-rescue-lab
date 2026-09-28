@@ -1,0 +1,116 @@
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+  # before/ is the inherited codebase: it is formatted and validated, but its
+  # tflint findings are the point, so the tflint hook (which fails on any
+  # finding) skips it. Checkov runs only through `make findings` below, with the
+  # pinned 3.3.19, which asserts the exact before/ findings and zero in after/.
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.109.1
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+        args:
+          - --tf-init-args=-backend=false
+      - id: terraform_tflint
+        exclude: ^before/
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+      - id: terraform_docs
+        exclude: ^(before/|after/modules/app-storage/tests/)
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+          - --args=--config=.terraform-docs.yml
+
+  - repo: local
+    hooks:
+      - id: terraform-test
+        name: terraform test (app-storage module)
+        entry: terraform -chdir=after/modules/app-storage test
+        language: system
+        pass_filenames: false
+        files: ^after/modules/app-storage/
+      - id: check-findings
+        name: before/ findings match report/evidence
+        entry: make findings
+        language: system
+        pass_filenames: false
+        files: ^(before/|after/|report/(REPORT\.md|evidence/)|\.checkov\.yaml|\.tflint\.hcl|scripts/check-findings\.sh)
+      - id: shellharden
+        name: shellharden
+        entry: shellharden --check
+        language: system
+        types: [shell]
+      - id: vale
+        name: vale
+        entry: bash -c 'vale sync --no-progress >/dev/null 2>&1; vale --minAlertLevel=error "$@"' --
+        language: system
+        types: [markdown]
+      - id: plan-gate-tests
+        name: plan gate fixtures
+        entry: scripts/tests/test-check-plan.sh
+        language: system
+        pass_filenames: false
+        files: ^scripts/
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.25
+    hooks:
+      - id: actionlint
+        files: ^(\.github|examples)/workflows/.*\.ya?ml$
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.30.1
+    hooks:
+      - id: zizmor
+        files: ^(\.github|examples)/workflows/.*\.ya?ml$
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: \.terraform\.lock\.hcl$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.49.1
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]

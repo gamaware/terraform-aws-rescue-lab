@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+
+  # Roots only: they own the lock files. before/ is frozen evidence.
+  - package-ecosystem: terraform
+    directories:
+      - /after/bootstrap
+      - /after/envs/dev
+      - /after/envs/prod
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore

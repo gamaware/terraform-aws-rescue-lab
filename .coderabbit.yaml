@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "before/**"
+      instructions: >-
+        Inherited code kept insecure on purpose as evidence for report/REPORT.md. Do not suggest fixes
+        here. Flag only changes that would break terraform validate or change a finding without updating the report.
+    - path: "after/**/*.tf"
+      instructions: >-
+        Check that resource names still match before/, that every address change has a moved block, that inputs are
+        validated and documented, and that no IAM statement uses a wildcard action or resource.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Actions pinned by full SHA, permissions: {} at workflow level, least privilege per job, no inline
+        expressions in run steps, no pull_request_target. The only AWS role is the read-only plan role.
+    - path: "**/*.md"
+      instructions: >-
+        Plain, concise English. Output excerpts must match what the tools print. No real account IDs or client names.
