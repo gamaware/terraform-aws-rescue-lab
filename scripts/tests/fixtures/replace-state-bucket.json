@@ -1,16 +1,28 @@
 {
   "format_version": "1.2",
   "terraform_version": "1.14.5",
+  "planned_values": {
+    "root_module": {}
+  },
   "resource_changes": [
     {
       "address": "aws_s3_bucket.state",
       "type": "aws_s3_bucket",
-      "change": { "actions": ["delete", "create"] }
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ]
+      }
     },
     {
       "address": "aws_iam_role.plan",
       "type": "aws_iam_role",
-      "change": { "actions": ["update"] }
+      "change": {
+        "actions": [
+          "update"
+        ]
+      }
     }
   ]
 }

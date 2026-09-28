@@ -31,9 +31,13 @@ case "$repo" in
     ;;
 esac
 
-# The named profile is the only credential source: environment keys would win
-# over it and could point at another account.
-unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
+# The named profile is the only credential source: environment keys, web
+# identity and container credentials would win over it and could point at
+# another account.
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN \
+  AWS_ROLE_ARN AWS_ROLE_SESSION_NAME AWS_WEB_IDENTITY_TOKEN_FILE \
+  AWS_CONTAINER_CREDENTIALS_RELATIVE_URI AWS_CONTAINER_CREDENTIALS_FULL_URI \
+  AWS_CONTAINER_AUTHORIZATION_TOKEN AWS_CONTAINER_AUTHORIZATION_TOKEN_FILE
 export AWS_PROFILE="$profile" AWS_REGION="$region" TF_IN_AUTOMATION=1 TF_INPUT=0
 
 echo "Account for this run (confirm before continuing):"
@@ -52,10 +56,15 @@ cleanup() {
   echo "==== destroy"
   terraform -chdir="$work" destroy -auto-approve -no-color >/dev/null || rc=1
   echo "==== leftovers tagged purpose=portfolio-test, run=$run_id"
-  left="$(aws resourcegroupstaggingapi get-resources \
-    --tag-filters "Key=purpose,Values=portfolio-test" "Key=run,Values=$run_id" \
-    --query 'ResourceTagMappingList[].ResourceARN' --output text | tr '\t' '\n' | grep -v '^None$' || true)"
   leaks=""
+  # A failed lookup is not "nothing left": report it and keep the state.
+  if ! tagged="$(aws resourcegroupstaggingapi get-resources \
+    --tag-filters "Key=purpose,Values=portfolio-test" "Key=run,Values=$run_id" \
+    --query 'ResourceTagMappingList[].ResourceARN' --output text)"; then
+    leaks="${leaks}unknown: the tagging API lookup failed"$'\n'
+    tagged=""
+  fi
+  left="$(tr '\t' '\n' <<<"$tagged" | { grep -v '^None$' || true; })"
   while read -r arn; do
     [ "$arn" != "" ] || continue
     # A destroyed KMS key stays listed while it waits for deletion; that is expected.

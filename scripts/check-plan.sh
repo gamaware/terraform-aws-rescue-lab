@@ -21,7 +21,9 @@ if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
 fi
 plan_json="$1"
 
-if ! jq -e '.format_version and (.resource_changes | type == "array" or . == null)' "$plan_json" >/dev/null; then
+# A plan always carries planned_values; state JSON and truncated files do not.
+if ! jq -e '.format_version and (.planned_values | type == "object")
+  and (.resource_changes | type == "array" or . == null)' "$plan_json" >/dev/null 2>&1; then
   echo "error: $plan_json is not the output of terraform show -json <planfile>" >&2
   exit 2
 fi

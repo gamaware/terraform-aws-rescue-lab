@@ -15,8 +15,8 @@ variable "name_prefix" {
   default     = "rescue-lab"
 
   validation {
-    condition     = can(regex("^[a-z0-9-]{3,24}$", var.name_prefix))
-    error_message = "name_prefix must be 3-24 characters of lowercase letters, digits and hyphens."
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$", var.name_prefix))
+    error_message = "name_prefix must be 3-24 characters of lowercase letters, digits and hyphens, and start and end with a letter or digit."
   }
 }
 

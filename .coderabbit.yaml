@@ -15,10 +15,12 @@ reviews:
     - path: "after/**/*.tf"
       instructions: >-
         Check that resource names still match before/, that every address change has a moved block, that inputs are
-        validated and documented, and that no IAM statement uses a wildcard action or resource.
+        validated and documented, and that no IAM statement uses a wildcard action or resource. The one exception is the
+        KMS key policy statement that gives the account root kms:* on "*" (the AWS default key policy, which keeps the
+        key manageable).
     - path: ".github/workflows/**"
       instructions: >-
-        Actions pinned by full SHA, permissions: {} at workflow level, least privilege per job, no inline
+        Actions pinned by full SHA, permissions: {} at workflow level, only the permissions each job needs, no inline
         expressions in run steps, no pull_request_target. The only AWS role is the read-only plan role.
     - path: "**/*.md"
       instructions: >-

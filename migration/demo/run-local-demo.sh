@@ -77,7 +77,9 @@ tf "$boot" apply -auto-approve -var "$repo_var" | tail -n 1
 # would block every state read. Real S3 needs no such step.
 aws s3api delete-bucket-policy --bucket "$state_bucket"
 mv "$boot/backend.tf.off" "$boot/backend.tf"
-tf "$boot" init -migrate-state -force-copy -backend-config="$work/backend.hcl" | grep -iE 'copy|migrat|success' || true
+# Capture first so a failed migration stops the script before the local state is removed.
+out="$(tf "$boot" init -migrate-state -force-copy -backend-config="$work/backend.hcl")"
+grep -iE 'copy|migrat|success' <<<"$out" || true
 rm -f "$boot/terraform.tfstate" "$boot/terraform.tfstate.backup"
 tf "$boot" state list | wc -l | sed 's/^ */bootstrap resources now in S3 state: /'
 
@@ -92,7 +94,8 @@ cat "$work/backups/prod.addresses"
 step "3. Migrate: copy the local state into after/envs/prod and init with the S3 backend"
 prod="$work/after/envs/prod"
 cp "$work/backups/prod.tfstate" "$prod/terraform.tfstate"
-tf "$prod" init -migrate-state -force-copy -backend-config="$work/backend.hcl" | grep -iE 'copy|migrat|backend|success' || true
+out="$(tf "$prod" init -migrate-state -force-copy -backend-config="$work/backend.hcl")"
+grep -iE 'copy|migrat|backend|success' <<<"$out" || true
 rm -f "$prod/terraform.tfstate" "$prod/terraform.tfstate.backup"
 
 step "4. Verify: same resources as the backup, state object in S3"
