@@ -1,5 +1,5 @@
-# One entry point for every offline check. CI runs `make verify` too, so a green
-# local run means a green pipeline. Nothing here calls AWS.
+# One entry point for every offline check. CI also runs `make verify`; additional shared checks are listed in the
+# README. Nothing here calls AWS.
 
 TERRAFORM ?= terraform
 TFLINT ?= tflint
