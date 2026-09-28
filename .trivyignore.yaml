@@ -1,0 +1,23 @@
+# Trivy exceptions for the intentional findings in before/ only. Each entry is
+# scoped to before/ and names the report finding it documents, so the same
+# misconfiguration anywhere else in the repository still fails the scan.
+# trivy.yaml points Trivy at this file.
+misconfigurations:
+  - id: AWS-0086
+    paths: ["before/**"]
+    statement: "F1 in report/REPORT.md: public access block does not block public ACLs"
+  - id: AWS-0087
+    paths: ["before/**"]
+    statement: "F1 in report/REPORT.md: public access block does not block public policies"
+  - id: AWS-0091
+    paths: ["before/**"]
+    statement: "F1 in report/REPORT.md: public access block does not ignore public ACLs"
+  - id: AWS-0092
+    paths: ["before/**"]
+    statement: "F1 in report/REPORT.md: public-read bucket ACL"
+  - id: AWS-0093
+    paths: ["before/**"]
+    statement: "F1 in report/REPORT.md: public access block does not restrict public buckets"
+  - id: AWS-0132
+    paths: ["before/**"]
+    statement: "F5 in report/REPORT.md: no customer managed KMS key"

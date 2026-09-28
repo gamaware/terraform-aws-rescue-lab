@@ -1,0 +1,27 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.14.5",
+  "resource_changes": [
+    {
+      "address": "module.storage.aws_s3_bucket.this",
+      "previous_address": "aws_s3_bucket.uploads_bucket",
+      "type": "aws_s3_bucket",
+      "change": { "actions": ["update"] }
+    },
+    {
+      "address": "module.storage.aws_s3_bucket.logs",
+      "type": "aws_s3_bucket",
+      "change": { "actions": ["no-op"], "importing": { "id": "harbor-prod-access-logs" } }
+    },
+    {
+      "address": "aws_s3_bucket_acl.uploads",
+      "type": "aws_s3_bucket_acl",
+      "change": { "actions": ["forget"] }
+    },
+    {
+      "address": "module.storage.aws_kms_key.this",
+      "type": "aws_kms_key",
+      "change": { "actions": ["create"] }
+    }
+  ]
+}
