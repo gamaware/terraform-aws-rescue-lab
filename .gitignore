@@ -24,9 +24,6 @@ credentials.json
 # Tooling
 .DS_Store
 .firecrawl/
-.claude-flow/
-.claude/proven-config*
-.claude/.proven-config*
 
 # Lock files are committed for the after/ roots only. before/ never had one
 # (finding F7), and modules and examples resolve providers from their caller.

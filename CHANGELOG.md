@@ -16,8 +16,7 @@ and the module in `after/modules/app-storage` follows [Semantic Versioning](http
 - `make demo` (moto started and stopped for the migration replay) and `make test-live` (maintainer-only online test
   with guaranteed teardown).
 - Context and state migration diagrams in `docs/diagrams/`, the cover image, the social preview (spec and render), ADRs
-  0007 and 0008, `.editorconfig`, editor hooks that format edited files and protect generated ones, and an OpenSSF
-  Scorecard workflow.
+  0007 and 0008, `.editorconfig` and an OpenSSF Scorecard workflow.
 - `before/`: inherited Harbor Goods codebase with local state, copy-pasted environments, a public bucket, a wildcard
   IAM policy and a rename that would destroy the prod bucket.
 - `report/REPORT.md`: ten findings ranked by risk, with tool evidence, fix and repair order.

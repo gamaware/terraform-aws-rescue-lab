@@ -9,7 +9,7 @@ ACTIONLINT_PY ?= actionlint-py==1.7.12.25
 
 TF_ROOTS := before/dev before/prod after/bootstrap after/envs/dev after/envs/prod \
 	after/modules/app-storage after/modules/app-storage/examples/basic
-SHELL_SCRIPTS := $(wildcard scripts/*.sh scripts/tests/*.sh migration/demo/*.sh .claude/hooks/*.sh)
+SHELL_SCRIPTS := $(wildcard scripts/*.sh scripts/tests/*.sh migration/demo/*.sh)
 
 export TF_IN_AUTOMATION := 1
 export TF_INPUT := 0
