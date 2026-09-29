@@ -29,7 +29,7 @@ cd after/bootstrap
 cp terraform.tfvars.example terraform.tfvars          # set github_repository
 mv backend.tf backend.tf.off
 terraform init && terraform apply
-cp backend.hcl.example backend.hcl                     # bucket = terraform output -raw state_bucket
+cp backend.hcl.example backend.hcl                     # set bucket to: terraform output -raw state_bucket
 mv backend.tf.off backend.tf
 terraform init -migrate-state -backend-config=backend.hcl
 rm terraform.tfstate terraform.tfstate.backup          # after checking terraform state list
@@ -76,7 +76,7 @@ copies it into the bucket.
 
 ```bash
 cd after/envs/prod
-cp backend.hcl.example backend.hcl                     # same bucket as bootstrap
+cp backend.hcl.example backend.hcl                     # set bucket to the bootstrap state_bucket output
 cp ~/tfstate-backups/prod.tfstate terraform.tfstate
 terraform init -migrate-state -backend-config=backend.hcl
 rm terraform.tfstate terraform.tfstate.backup          # the S3 copy is now the source of truth
@@ -92,10 +92,12 @@ Terraform has been successfully initialized!
 ## 4. Verify the copy
 
 ```bash
-terraform state pull > /tmp/migrated.tfstate
+umask 077 && check_dir="$(mktemp -d)"                 # state holds secrets: keep the copy private
+terraform state pull > "$check_dir/migrated.tfstate"
 terraform state list | sort | diff ~/tfstate-backups/prod.addresses - && echo "state list: identical to the backup"
-diff <(jq -S .resources ~/tfstate-backups/prod.tfstate) <(jq -S .resources /tmp/migrated.tfstate) \
+diff <(jq -S .resources ~/tfstate-backups/prod.tfstate) <(jq -S .resources "$check_dir/migrated.tfstate") \
   && echo "resource attributes: identical to the backup"
+rm -rf "$check_dir"
 aws s3api list-objects-v2 --bucket rescue-lab-tfstate-YOUR_AWS_ACCOUNT_ID --query 'Contents[].Key' --output text
 ```
 
@@ -151,7 +153,7 @@ says `0 to destroy`.
 ## 7. Run the plan gate
 
 ```bash
-terraform show -json tfplan > plan.json
+rm -f plan.json && (umask 077 && terraform show -json tfplan > plan.json)   # plan JSON can hold secrets
 ../../../scripts/check-plan.sh plan.json
 ```
 
@@ -167,6 +169,7 @@ every PR ([ADR 0005](../docs/adr/0005-plan-json-policy-gate.md)).
 
 ```bash
 terraform apply tfplan
+rm -f tfplan plan.json
 terraform plan -detailed-exitcode       # exit code 0 means no changes
 aws s3api list-objects-v2 --bucket harbor-prod-uploads --query 'Contents[].Key' --output text
 ```
@@ -183,7 +186,7 @@ Lift the freeze. Keep the laptop backup until the next successful plan in CI.
 
 | Failure point | State of the world | Rollback |
 | --- | --- | --- |
-| Steps 2-4 (before apply) | Nothing in AWS changed; the laptop file and the S3 copy both exist | Delete the S3 object `envs/prod/terraform.tfstate`, keep using `before/prod` with the backup. |
+| Steps 2-4 (before apply) | Nothing in AWS changed; the laptop file and the S3 copy both exist | Delete the S3 object `envs/prod/terraform.tfstate` and keep the backup as the prod state. `before/prod` renamed the bucket without a `moved` block (F3), so plan it before any apply and add the `moved` block if the plan destroys the bucket. |
 | Step 5 | Bucket ACL is private | `aws s3api put-bucket-acl --bucket harbor-prod-uploads --acl public-read` restores public listing. Only if the business needs it back before CloudFront exists. |
 | Step 6-7 | Plan shows a destroy or the gate fails | Stop. Do not apply. Add the missing `moved` block and plan again. |
 | Step 8, apply fails partway | Some settings applied, state records what succeeded | Fix forward: rerun `terraform plan`, read it, apply again. State is consistent with AWS after a partial apply. |

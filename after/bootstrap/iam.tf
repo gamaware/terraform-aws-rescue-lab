@@ -102,6 +102,7 @@ data "aws_iam_policy_document" "plan_deny_data" {
     sid    = "DenyParameterAndSecretReads"
     effect = "Deny"
     actions = [
+      "secretsmanager:BatchGetSecretValue",
       "secretsmanager:GetSecretValue",
       "ssm:GetParameter",
       "ssm:GetParameterHistory",

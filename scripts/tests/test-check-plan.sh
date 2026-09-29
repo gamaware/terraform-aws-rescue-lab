@@ -23,5 +23,7 @@ expect 0 delete-unprotected.json
 expect 1 replace-state-bucket.json
 expect 1 rename-without-moved.json
 expect 2 missing-file.json
+expect 2 state-not-plan.json
+expect 2 truncated-plan.json
 
 exit "$failures"

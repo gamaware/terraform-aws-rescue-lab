@@ -48,23 +48,33 @@ jobs:
           AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
         run: terraform -chdir="$ROOT" init -backend-config="bucket=$STATE_BUCKET" -backend-config="region=$AWS_REGION"
 
+      # Exit code 2 also covers changes merged to main but not applied yet.
+      # resource_drift in the plan JSON holds only changes made outside
+      # Terraform, so the summary tells the two cases apart.
       - name: terraform plan
         run: |
           set +e
-          terraform -chdir="$ROOT" plan -no-color -lock-timeout=5m -detailed-exitcode > plan.txt 2>&1
+          terraform -chdir="$ROOT" plan -no-color -lock-timeout=5m -detailed-exitcode -out=tfplan > plan.txt 2>&1
           code=$?
           set -e
           cat plan.txt
           case "$code" in
             0) echo "### No drift in $ROOT" >> "$GITHUB_STEP_SUMMARY" ;;
             2)
+              terraform -chdir="$ROOT" show -json tfplan > plan.json
+              drifted="$(jq -e '.resource_drift // [] | length' plan.json)"
+              if [ "$drifted" -gt 0 ]; then
+                title="Drift detected in $ROOT: $drifted resources changed outside Terraform"
+              else
+                title="No drift in $ROOT, but main has changes that are not applied yet"
+              fi
               {
-                echo "### Drift detected in $ROOT"
+                echo "### $title"
                 echo '```text'
                 grep -E '^\s*[#~+-]|Plan:' plan.txt || true
                 echo '```'
               } >> "$GITHUB_STEP_SUMMARY"
-              echo "::error::Drift detected in $ROOT. Read the job summary."
+              echo "::error::$title. Read the job summary."
               exit 1
               ;;
             *) exit "$code" ;;
