@@ -61,6 +61,8 @@ Completion requires the following:
 
 ## Architecture
 
+![Animated flow: read-only CI scans of the inherited Terraform feed a ranked findings report, three fix pull requests rebuild after/, state moves to an encrypted S3 bucket, and a read-only OIDC plan passes the no-destroy gate before a client engineer applies](docs/diagrams/architecture-animated.svg)
+
 ![Terraform rescue context view](docs/diagrams/rescue-context.png)
 
 CI scans the inherited code, supplying all results as report evidence (1, 2). The fixes reach `after/` in three pull
