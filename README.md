@@ -190,11 +190,9 @@ under `.github/workflows/` have no ability to request OIDC tokens or access AWS
 
 ## Related work
 
-- [Terraform on AWS audit and fix on Upwork](https://www.upwork.com/freelancers/~014b3520cf9e140103). The
-  [aws-devops-portfolio](https://github.com/gamaware/aws-devops-portfolio) index lists every service and its
+- The [aws-devops-portfolio](https://github.com/gamaware/aws-devops-portfolio) index lists every project and its
   repository.
-- The method is the one Alex uses in audits for ITESO and freelance clients in Guadalajara. Every finding here comes
-  from the fictional code in this repository.
+- Every finding here comes from the fictional code in this repository.
 - Shared [gamaware/.github](https://github.com/gamaware/.github) files cover contributions, conduct and support. Use
   [SECURITY.md](SECURITY.md) for security reporting and [CHANGELOG.md](CHANGELOG.md) for changes.
 
