@@ -9,6 +9,7 @@ updates:
     groups:
       github-actions-all:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: ci
 
@@ -24,7 +25,7 @@ updates:
       default-days: 7
     groups:
       terraform-all:
-        group-by: dependency-name
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: chore
