@@ -6,6 +6,9 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      github-actions-all:
+        patterns: ["*"]
     commit-message:
       prefix: ci
 
@@ -19,5 +22,9 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    groups:
+      terraform-all:
+        group-by: dependency-name
+        patterns: ["*"]
     commit-message:
       prefix: chore
